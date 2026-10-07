@@ -2,6 +2,13 @@
 
 All notable changes to AInotate.
 
+## 0.1.1 - 2026-10-07
+
+### Changed
+- PyPI metadata: keywords and classifiers, so the package shows up under screenshot, AI,
+  documentation and testing categories; project links include DontPayFull.
+- README: DontPayFull credit, copyright line and footer.
+
 ## 0.1.0 - 2026-10-07
 
 First public release.

@@ -4,13 +4,38 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ainotate"
-version = "0.1.0"
+version = "0.1.1"
 description = "Annotated screenshots for AI agents: Skitch-style arrows, numbered steps, boxes, labels, solid redaction"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "AGPL-3.0-or-later"
 authors = [
     { name = "DontPayFull" },
+]
+keywords = [
+    "screenshot", "annotation", "annotate", "ai", "ai-agents", "llm", "mcp", "model-context-protocol",
+    "claude", "skitch", "arrows", "callouts", "redaction", "playwright", "ocr", "documentation",
+    "bug-report", "step-by-step-guide",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Documentation",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Multimedia :: Graphics :: Capture :: Screen Capture",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Documentation",
+    "Topic :: Software Development :: Testing",
 ]
 dependencies = [
     "Pillow>=10.1",
