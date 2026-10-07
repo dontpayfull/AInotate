@@ -1,0 +1,46 @@
+{
+ "url": "https://the-internet.herokuapp.com/dynamic_controls",
+ "preset": "laptop",
+ "name": "before",
+ "crop": {
+  "x": 100,
+  "y": 0,
+  "w": 640,
+  "h": 340
+ },
+ "marks": [
+  {
+   "type": "box",
+   "rect": {
+    "x": 151,
+    "y": 185,
+    "w": 110,
+    "h": 20
+   },
+   "label": "Checkbox",
+   "label_at": [
+    290,
+    180
+   ],
+   "arrow": false,
+   "pad": 2
+  },
+  {
+   "type": "step",
+   "n": 1,
+   "rect": {
+    "x": 155,
+    "y": 215.6,
+    "w": 112.5,
+    "h": 46
+   },
+   "label": "Click Remove",
+   "label_at": [
+    290,
+    224
+   ],
+   "arrow": false,
+   "badge": "l"
+  }
+ ]
+}

@@ -1,0 +1,53 @@
+{
+ "url": "https://the-internet.herokuapp.com/tables",
+ "preset": "laptop",
+ "name": "bug sort",
+ "actions": [
+  {
+   "click": {
+    "selector": "#table1 thead th:nth-child(4)"
+   }
+  }
+ ],
+ "crop": {
+  "x": 110,
+  "y": 150,
+  "w": 1000,
+  "h": 550
+ },
+ "marks": [
+  {
+   "type": "click",
+   "at": [
+    590,
+    258
+   ]
+  },
+  {
+   "type": "box",
+   "color": "good",
+   "target": {
+    "selector": "#table1 tbody"
+   },
+   "label": "Sorted by Due",
+   "label_at": [
+    895,
+    330
+   ],
+   "pad": 2
+  },
+  {
+   "type": "box",
+   "color": "bad",
+   "target": {
+    "selector": "#table2 tbody"
+   },
+   "label": "Not sorted",
+   "label_at": [
+    895,
+    598
+   ],
+   "pad": 2
+  }
+ ]
+}

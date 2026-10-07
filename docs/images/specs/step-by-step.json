@@ -1,0 +1,68 @@
+{
+ "url": "https://en.wikipedia.org/wiki/Screenshot",
+ "preset": "laptop",
+ "name": "guide reading",
+ "crop": {
+  "x": 600,
+  "y": 70,
+  "w": 680,
+  "h": 520
+ },
+ "frame": {
+  "chrome": "browser",
+  "bg": "ocean"
+ },
+ "marks": [
+  {
+   "type": "step",
+   "n": 1,
+   "rect": {
+    "x": 1050,
+    "y": 275,
+    "w": 72,
+    "h": 26
+   },
+   "label": "Bigger text",
+   "label_at": [
+    1138,
+    270
+   ],
+   "arrow": false,
+   "badge": "l"
+  },
+  {
+   "type": "step",
+   "n": 2,
+   "rect": {
+    "x": 1050,
+    "y": 386,
+    "w": 66,
+    "h": 26
+   },
+   "label": "Full width",
+   "label_at": [
+    1138,
+    381
+   ],
+   "arrow": false,
+   "badge": "l"
+  },
+  {
+   "type": "step",
+   "n": 3,
+   "rect": {
+    "x": 1050,
+    "y": 529,
+    "w": 64,
+    "h": 26
+   },
+   "label": "Dark mode",
+   "label_at": [
+    1138,
+    524
+   ],
+   "arrow": false,
+   "badge": "l"
+  }
+ ]
+}

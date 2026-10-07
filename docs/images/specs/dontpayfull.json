@@ -1,0 +1,41 @@
+{
+ "url": "https://www.dontpayfull.com",
+ "preset": "laptop",
+ "name": "dontpayfull",
+ "frame": {
+  "chrome": "browser",
+  "bg": "auto"
+ },
+ "crop": {
+  "x": 0,
+  "y": 0,
+  "w": 1280,
+  "h": 460
+ },
+ "marks": [
+  {
+   "type": "step",
+   "n": 1,
+   "target": {
+    "selector": "#top-search"
+   },
+   "label": "Type a store"
+  },
+  {
+   "type": "step",
+   "n": 2,
+   "target": {
+    "text": "Join now"
+   },
+   "label": "Free account"
+  },
+  {
+   "type": "arrow",
+   "color": "info",
+   "target": {
+    "text": "Saving tips"
+   },
+   "label": "Shopping guides"
+  }
+ ]
+}

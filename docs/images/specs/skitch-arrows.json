@@ -1,0 +1,7 @@
+{"url": "https://news.ycombinator.com", "preset": "laptop", "name": "skitch arrows",
+ "frame": {"chrome": "browser", "bg": "sunset"},
+ "crop": {"x": 0, "y": 0, "w": 1280, "h": 300},
+ "marks": [
+  {"type": "arrow", "target": {"text": "comments", "exact": true, "nth": 0}, "label": "Discussion", "color": "good"},
+  {"type": "arrow", "target": {"text": "submit", "exact": true}, "label": "Post a link", "color": "info"},
+  {"type": "step", "n": 1, "target": {"text": "login", "exact": true}, "label": "Sign in"}]}

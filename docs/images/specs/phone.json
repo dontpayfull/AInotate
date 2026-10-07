@@ -1,0 +1,42 @@
+{
+ "url": "https://en.wikipedia.org/wiki/Screenshot",
+ "preset": "phone",
+ "name": "phone",
+ "crop": {
+  "x": 0,
+  "y": 0,
+  "w": 390,
+  "h": 420
+ },
+ "frame": {
+  "bg": "lavender"
+ },
+ "marks": [
+  {
+   "type": "step",
+   "n": 1,
+   "target": {
+    "selector": "#mw-mf-main-menu-button"
+   },
+   "label": "Menu",
+   "badge": "br",
+   "label_at": [
+    160,
+    64
+   ]
+  },
+  {
+   "type": "step",
+   "n": 2,
+   "target": {
+    "selector": "#searchIcon"
+   },
+   "label": "Search",
+   "badge": "l",
+   "label_at": [
+    252,
+    64
+   ]
+  }
+ ]
+}

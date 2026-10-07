@@ -1,0 +1,32 @@
+{
+ "url": "https://news.ycombinator.com",
+ "preset": "laptop",
+ "name": "auto placement",
+ "crop": {
+  "x": 130,
+  "y": 0,
+  "w": 620,
+  "h": 175
+ },
+ "marks": [
+  {
+   "type": "arrow",
+   "target": {
+    "text": "comments",
+    "exact": true,
+    "nth": 0
+   },
+   "label": "Discussion",
+   "color": "good"
+  },
+  {
+   "type": "arrow",
+   "target": {
+    "text": "submit",
+    "exact": true
+   },
+   "label": "Post a link",
+   "color": "info"
+  }
+ ]
+}

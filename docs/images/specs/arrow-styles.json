@@ -1,0 +1,33 @@
+{
+ "url": "https://news.ycombinator.com",
+ "preset": "laptop",
+ "name": "arrow styles",
+ "arrow_style": "curved",
+ "crop": {
+  "x": 130,
+  "y": 0,
+  "w": 560,
+  "h": 150
+ },
+ "marks": [
+  {
+   "type": "arrow",
+   "target": {
+    "text": "comments",
+    "exact": true,
+    "nth": 0
+   },
+   "label": "Discussion",
+   "color": "good"
+  },
+  {
+   "type": "arrow",
+   "target": {
+    "text": "submit",
+    "exact": true
+   },
+   "label": "Post a link",
+   "color": "info"
+  }
+ ]
+}

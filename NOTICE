@@ -1,0 +1,118 @@
+AInotate
+Copyright (C) 2026 DontPayFull
+
+AInotate is free software: you can redistribute it and/or modify it under the
+terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version (SPDX: AGPL-3.0-or-later). See LICENSE for the full text.
+
+AInotate is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE. See the GNU Affero General Public License for details.
+
+This file lists third-party work that AInotate bundles, derives from or
+depends on, with the notices their licenses require.
+
+
+============================================================================
+1. Inter font (bundled)
+============================================================================
+
+File: src/ainotate/fonts/Inter-Bold.ttf
+Source: https://github.com/rsms/inter
+Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)
+License: SIL Open Font License, Version 1.1 (OFL-1.1)
+
+The full license text ships next to the font in src/ainotate/fonts/OFL.txt.
+The font is bundled unmodified and is not sold by itself.
+
+
+============================================================================
+2. Arrowshot (arrow proportions)
+============================================================================
+
+The tapered arrow outline in src/ainotate/geometry.py uses the proportions of
+Skitch-style arrows as measured and published by Arrowshot
+(https://github.com/TaroMoteki/Arrowshot): a flat-based head about 0.98 as
+wide as it is long, and an exponential taper of the shaft from 0.44 at the
+neck to 0.075 at the tail, relative to the head half-width. No Arrowshot code
+is included; the notice below is reproduced as its license requires for
+derived work.
+
+MIT License
+
+Copyright (c) 2026 PictoJot contributors
+Copyright (c) 2026 Taro Moteki
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+============================================================================
+3. github/awesome-copilot, skills/image-annotations (label placement idea)
+============================================================================
+
+The label-placement idea used in src/ainotate/render.py (placing callout
+labels next to their targets, away from the content they describe) is
+adapted from the image-annotations skill in
+https://github.com/github/awesome-copilot (skills/image-annotations). The
+implementation in AInotate is its own.
+
+MIT License
+
+Copyright GitHub, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+============================================================================
+4. Dependencies (installed separately, not bundled)
+============================================================================
+
+Pillow (required)
+  https://python-pillow.github.io
+  Copyright (c) 1997-2011 by Secret Labs AB
+  Copyright (c) 1995-2011 by Fredrik Lundh and contributors
+  Copyright (c) 2010 by Jeffrey 'Alex' Clark and contributors
+  License: MIT-CMU (Historical Permission Notice and Disclaimer, HPND)
+
+Playwright for Python (optional, extra "web")
+  https://github.com/microsoft/playwright-python
+  Copyright (c) Microsoft Corporation
+  License: Apache License 2.0
+  Playwright downloads browser binaries (Chromium, Firefox, WebKit) that
+  carry their own licenses.
+
+Other optional extras (mcp, ocr, desktop) install packages under their own
+licenses; see each package's metadata.

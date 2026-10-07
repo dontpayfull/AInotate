@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ainotate"
+version = "0.1.0"
+description = "Annotated screenshots for AI agents: Skitch-style arrows, numbered steps, boxes, labels, solid redaction"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "AGPL-3.0-or-later"
+authors = [
+    { name = "DontPayFull" },
+]
+dependencies = [
+    "Pillow>=10.1",
+    "tomli>=1.1; python_version<'3.11'",
+]
+
+[project.optional-dependencies]
+web = ["playwright>=1.40"]
+mcp = ["mcp>=2"]
+ocr = [
+    "pyobjc-framework-Vision; sys_platform=='darwin'",
+    "winrt-runtime; sys_platform=='win32'",
+    "winrt-Windows.Foundation; sys_platform=='win32'",
+    "winrt-Windows.Foundation.Collections; sys_platform=='win32'",
+    "winrt-Windows.Globalization; sys_platform=='win32'",
+    "winrt-Windows.Graphics.Imaging; sys_platform=='win32'",
+    "winrt-Windows.Media.Ocr; sys_platform=='win32'",
+    "winrt-Windows.Storage.Streams; sys_platform=='win32'",
+]
+desktop = [
+    "mss>=9; sys_platform=='linux'",
+    "pyobjc-framework-Quartz; sys_platform=='darwin'",
+]
+all = ["ainotate[web,mcp,ocr,desktop]"]
+dev = ["pytest", "anyio"]
+
+[project.urls]
+Homepage = "https://github.com/dontpayfull/AInotate"
+Changelog = "https://github.com/dontpayfull/AInotate/blob/main/CHANGELOG.md"
+
+[project.scripts]
+ainotate = "ainotate.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ainotate"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/ainotate", "tests", "docs", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["web: needs a browser (Playwright); skipped by default without it"]

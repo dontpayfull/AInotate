@@ -1,0 +1,43 @@
+{
+ "url": "https://en.wikipedia.org/wiki/Screenshot",
+ "preset": "laptop",
+ "name": "loupe keys",
+ "crop": {
+  "x": 390,
+  "y": 120,
+  "w": 880,
+  "h": 470
+ },
+ "marks": [
+  {
+   "type": "magnify",
+   "rect": {
+    "x": 510,
+    "y": 502,
+    "w": 48,
+    "h": 26
+   },
+   "zoom": 3
+  },
+  {
+   "type": "text",
+   "text": "Edit the whole page",
+   "at": [
+    790,
+    436
+   ]
+  },
+  {
+   "type": "keys",
+   "keys": [
+    "Alt",
+    "Shift",
+    "E"
+   ],
+   "at": [
+    790,
+    482
+   ]
+  }
+ ]
+}

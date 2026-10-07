@@ -1,0 +1,58 @@
+# Changelog
+
+All notable changes to AInotate.
+
+## 0.1.0 - 2026-10-07
+
+First public release.
+
+### Added
+- Annotated screenshots from a JSON spec: numbered steps, boxes, labels, Skitch-style tapered
+  arrows with a soft shadow, highlight, spotlight, text notes and solid redaction.
+- `ainotate` package (src layout, AGPL-3.0-or-later) with the `ainotate` command and
+  `python -m ainotate`. Rendering is pure: it returns the image and warnings.
+- Content-aware placement: a map of the page content (text, icons, lines); labels go to free
+  space near their target and are planned together; arrows are priced by length and by what
+  they cross, curve around text and bend gently when long; step badges take the corner that
+  covers the least. A warning when a label has to cover text. Four arrow styles: `skitch`,
+  `curved`, `straight`, `line`.
+- `grid`, `zoom` and `info` to read exact positions at full resolution; one units rule with
+  `scale`.
+- `ainotate shoot`: URL plus marks with `target` in one call: capture, run actions, measure,
+  redact, annotate, save. Presets laptop, wide and phone.
+- Web capture for any browser: own Playwright (Chromium, Firefox, WebKit) or attach over CDP
+  to a running Chromium (Chrome, Edge, Brave, Arc, BrowserOS neo) with per-tab emulation that
+  is always restored. Targets by text, role or CSS selector; actions click, fill, wait,
+  scroll_to, wait_ms; overlay hiding; same-origin iframe offsets; retry over HTTP/1.1 when a
+  navigation stalls silently.
+- OCR text targeting on any image: `ainotate locate` and `"target": {"text": ...}` on marks,
+  with Apple Vision, Windows.Media.Ocr or Tesseract. Exit 5 for ambiguous text, 6 for text
+  not found (closest matches listed).
+- Automatic privacy redaction: emails, phones, cards (Luhn), IBANs (mod 97), API keys, JWTs,
+  tokens, password and personal-data fields, custom regexes and allow lists. On by default for
+  web shots (live DOM, input values included), opt-in on images (OCR). Solid blocks only.
+- Marks `magnify` (loupe), `click` (ripple and pointer), `keys` (keycaps), decorative `blur`
+  and `pixelate` (refused for data marked sensitive); overlap and crossing warnings.
+- Frames: auto or preset gradient backgrounds, rounded corners, soft shadow, browser or window
+  chrome with the page address, aspect presets for social posts.
+- Export: step guides in Markdown, HTML and PDF; APNG and GIF animations; before/after
+  plates; copy to the clipboard.
+- Desktop capture: screen, region, window list and window capture, clipboard image, on macOS,
+  Windows and Linux. Windows: explicit ctypes signatures, DWM frame bounds, per-monitor DPI,
+  multi-monitor origin.
+- `ainotate doctor`: parallel checks of Python, Pillow, font, output folders, Playwright, CDP,
+  screen recording permission, window listing, OCR, clipboard and MCP, each with the exact
+  fix for the current OS; `--json`.
+- MCP stdio server (`ainotate mcp`) for Claude Desktop and other clients: tools for shoot,
+  capture, annotate, preview, locate, grid, zoom, desktop capture, guides, compare, animate,
+  clipboard and doctor; JSON results with small previews; spec resource and two prompts.
+- CLI flags `--draft`, `--debug`, `--copy`, `--json`, `--privacy`; exit codes 0 ok, 1 save,
+  2 spec or usage, 3 render, 4 capture or missing backend, 5 ambiguous text, 6 not found.
+- Configurable output: env, `~/.config/ainotate/config.toml`, defaults; never overwrites.
+- Agent skill in `skill/` that drives the CLI, with references for the spec, browsers and the
+  MCP server.
+- Bundled Inter Bold (SIL OFL 1.1), so labels render the same everywhere, diacritics included.
+
+### Platform status
+- macOS verified. Windows and Linux are experimental: implemented and unit-tested with
+  mocks, not yet verified on real machines.

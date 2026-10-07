@@ -1,0 +1,40 @@
+{
+ "url": "https://github.com/microsoft/playwright",
+ "preset": "laptop",
+ "name": "github",
+ "frame": {
+  "chrome": "browser",
+  "bg": "ocean"
+ },
+ "crop": {
+  "x": 0,
+  "y": 130,
+  "w": 1280,
+  "h": 330
+ },
+ "marks": [
+  {
+   "type": "box",
+   "color": "good",
+   "target": {
+    "role": "button",
+    "name": "Code"
+   },
+   "label": "Clone it"
+  },
+  {
+   "type": "arrow",
+   "target": {
+    "selector": "a[class*=StarButton]"
+   },
+   "label": "Bookmark",
+   "color": "info"
+  },
+  {
+   "type": "highlight",
+   "target": {
+    "text": "framework for Web Testing"
+   }
+  }
+ ]
+}

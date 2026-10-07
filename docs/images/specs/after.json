@@ -1,0 +1,49 @@
+{
+ "url": "https://the-internet.herokuapp.com/dynamic_controls",
+ "preset": "laptop",
+ "name": "after",
+ "actions": [
+  {
+   "wait": {
+    "role": "button",
+    "name": "Remove"
+   }
+  },
+  {
+   "click": {
+    "role": "button",
+    "name": "Remove"
+   }
+  },
+  {
+   "wait": {
+    "selector": "#message"
+   }
+  }
+ ],
+ "crop": {
+  "x": 100,
+  "y": 0,
+  "w": 640,
+  "h": 340
+ },
+ "marks": [
+  {
+   "type": "box",
+   "color": "good",
+   "rect": {
+    "x": 150,
+    "y": 253,
+    "w": 78,
+    "h": 24
+   },
+   "label": "Checkbox removed",
+   "label_at": [
+    250,
+    250
+   ],
+   "arrow": false,
+   "pad": 3
+  }
+ ]
+}
