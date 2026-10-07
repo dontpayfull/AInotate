@@ -39,6 +39,7 @@ dev = ["pytest", "anyio"]
 
 [project.urls]
 Homepage = "https://github.com/dontpayfull/AInotate"
+DontPayFull = "https://www.dontpayfull.com"
 Changelog = "https://github.com/dontpayfull/AInotate/blob/main/CHANGELOG.md"
 
 [project.scripts]
