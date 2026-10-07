@@ -25,7 +25,7 @@ The specs are in [docs/images/specs](https://github.com/dontpayfull/AInotate/tre
 | | |
 |---|---|
 | ![The DontPayFull home page: step 1 on the store search box, step 2 on Join now, a blue arrow to Saving tips](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/dontpayfull.png) | ![The Playwright repository on GitHub: the Code button outlined green as Clone it, an arrow to the Star button, the About text highlighted](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/github.png) |
-| **Numbered steps** on a busy header | **Box, arrow and highlight** on GitHub |
+| **Numbered steps** on the busy header of [DontPayFull](https://www.dontpayfull.com), coupons for 20,000+ stores | **Box, arrow and highlight** on GitHub |
 | ![Three numbered steps in the Appearance panel of a Wikipedia article, framed in a browser window on a blue gradient](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/step-by-step.png) | ![A bug report: one table outlined green as sorted, the other red as not sorted, with every email address blacked out automatically](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/bug-report.png) |
 | **Step-by-step guide** with browser chrome and a gradient frame | **Bug report**, emails redacted automatically by the privacy scan |
 | ![A circular magnifier enlarging a small edit link, next to keycaps for Alt Shift E](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/loupe-keys.png) | ![Before and after plate: a checkbox and a Remove button, then the message It's gone](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/before-after.png) |
@@ -194,6 +194,7 @@ target was not found. Messages say what to fix.
 
 ## License
 
+Copyright © 2026 [DontPayFull](https://www.dontpayfull.com).
 AInotate is free software under the
 [GNU Affero General Public License v3.0 or later](https://github.com/dontpayfull/AInotate/blob/main/LICENSE). If you run a
 modified AInotate as a network service, the AGPL requires you to offer its
@@ -202,3 +203,10 @@ source to the users of that service.
 Bundled and derived third-party work (the Inter font, arrow proportions
 from Arrowshot, a label-placement idea from github/awesome-copilot) and
 dependency licenses are listed in [NOTICE](https://github.com/dontpayfull/AInotate/blob/main/NOTICE).
+
+---
+
+<p align="center">
+Made with ❤️ by the <a href="https://www.dontpayfull.com">DontPayFull</a> team<br>
+<sub>Coupons &amp; discount codes for 20,000+ stores</sub>
+</p>
