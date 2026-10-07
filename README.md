@@ -2,25 +2,76 @@
 
 **Annotated screenshots for AI agents. Show, don't describe.**
 
-AInotate turns a web page, a window or any screenshot into a clear annotated
-image: numbered steps, Skitch-style arrows, boxes, labels, a magnifier,
-keycaps, solid redaction and an optional polished frame. It is built for AI
-agents that would otherwise write "top right, under the second menu..."
-in a chat reply, a bug ticket or a how-to guide.
+[![PyPI](https://img.shields.io/pypi/v/ainotate)](https://pypi.org/project/ainotate/)
+[![Python](https://img.shields.io/pypi/pyversions/ainotate)](https://pypi.org/project/ainotate/)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](https://github.com/dontpayfull/AInotate/blob/main/LICENSE)
+[![MCP server](https://img.shields.io/badge/MCP-server-8A2BE2)](https://github.com/dontpayfull/AInotate/blob/main/skill/references/mcp.md)
 
-You describe the marks in a small JSON spec. AInotate finds the elements
-(by text, role or CSS selector on web pages, by OCR on images), places the
-labels where they cover the least content, redacts secrets and saves the
-result. The agent then reads the image to check it before sending.
+![Hacker News with Skitch-style arrows: Discussion, Post a link and a numbered Sign in step, in a browser window on a sunset gradient](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/skitch-arrows.png)
+
+> **You:** How do I post a link on Hacker News?
+>
+> **Agent without AInotate:** "In the orange bar at the top of the page, find
+> *submit*, the last link after *jobs*..."
+>
+> **Agent with AInotate:** sends the image above. "Click *submit*, where the
+> blue arrow points."
+
+AInotate lets an AI agent answer "where" and "how" questions with a picture:
+it captures a web page, a window or any screenshot, finds the elements, adds
+numbered steps, Skitch-style arrows, boxes and labels where they cover the
+least content, blacks out secrets, and checks the result before sending it.
+It works in Claude Code, Claude Desktop, Cursor and any MCP client, from the
+command line and from Python.
+
+## Set it up in your agent
+
+**1. Install** (Python 3.10+):
+
+```bash
+pipx install "ainotate[all]"   # or: uv tool install "ainotate[all]"
+ainotate doctor                # checks this machine, prints the exact fix for anything missing
+```
+
+**2. Connect it** to the agent you use:
+
+| Agent | How |
+|---|---|
+| Claude Code | `claude mcp add ainotate -- ainotate mcp`, plus the skill (below) for the full workflow |
+| Claude Desktop, Cowork | add the server to `claude_desktop_config.json` (below) and restart Claude |
+| Cursor | add the same server to `~/.cursor/mcp.json` |
+| Any MCP client | command `ainotate`, arguments `mcp` (stdio) |
+
+AInotate runs on your own computer: Cowork reaches it through the Claude
+desktop app, so keep the app open while a task uses it.
+
+```json
+{"mcpServers": {"ainotate": {"command": "ainotate", "args": ["mcp"]}}}
+```
+
+The **skill** teaches an agent when and how to annotate: pick a source,
+find exact positions, annotate, read the image to verify, deliver. For
+Claude Code and other agents that read `SKILL.md`:
+
+```bash
+git clone --depth 1 https://github.com/dontpayfull/AInotate ~/.ainotate
+mkdir -p ~/.claude/skills && ln -s ~/.ainotate/skill ~/.claude/skills/ainotate
+```
+
+Config paths for every OS, permissions and the tool list:
+[skill/references/mcp.md](https://github.com/dontpayfull/AInotate/blob/main/skill/references/mcp.md).
+
+**3. Ask.** "Show me where to switch Wikipedia to dark mode." The agent
+captures the page, annotates it, checks it and sends the image. With the
+skill it also does this on its own whenever an answer depends on where
+something is on the screen: a "how do I" question, a visual bug, a
+before/after of a change.
 
 ## Gallery
 
-Every image below was made with `shoot` against a public site, in one
-call: open the page, find the elements, place the labels, draw, frame.
-The specs are in [docs/images/specs](https://github.com/dontpayfull/AInotate/tree/main/docs/images/specs).
-
-![Hacker News with three Skitch-style arrows: Discussion, Post a link and a numbered Sign in step, in a browser window on a sunset gradient](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/skitch-arrows.png)
-<p align="center"><b>Skitch-style arrows</b>: tapered, with a soft shadow; labels sit in free space and the arrows reach the target</p>
+Every image below was made in one `shoot` call against a public site:
+open the page, find the elements, place the labels, draw, frame. The specs
+are in [docs/images/specs](https://github.com/dontpayfull/AInotate/tree/main/docs/images/specs).
 
 | | |
 |---|---|
@@ -60,17 +111,9 @@ The image is never enlarged to make room. If a label still has to cover
 something, AInotate says so in a warning, and `label_at` pins a label
 exactly where you want it.
 
-## Quickstart (30 seconds)
+## From the command line
 
-AInotate needs Python 3.10+:
-
-```bash
-pipx install "ainotate[all]"   # or: uv tool install "ainotate[all]"
-ainotate doctor                # checks everything, prints exact fixes
-```
-
-`doctor` tells you the one command that downloads Chromium for web
-capture. Then save this as `hn.json`:
+Save this as `hn.json`:
 
 ```json
 {"url": "https://news.ycombinator.com",
@@ -86,8 +129,25 @@ capture. Then save this as `hn.json`:
 ainotate shoot hn.json --draft    # temp file; drop --draft to save
 ```
 
-The output path is printed on stdout. Final images go to
-`~/Pictures/AInotate` unless you configure another folder.
+The output path is printed on stdout. Images are saved to
+`~/Pictures/AInotate` unless you configure another folder. `ainotate --help`
+lists every command (capture, annotate, locate by OCR, grid, zoom, guide,
+compare, animate, copy); the full spec is in
+[skill/references/spec.md](https://github.com/dontpayfull/AInotate/blob/main/skill/references/spec.md). Exit codes: `0` ok,
+`1` cannot save, `2` invalid spec, `3` cannot draw, `4` capture failed or an
+optional dependency is missing, `5` ambiguous text target, `6` target not
+found.
+
+**Python.** The same pipeline is importable:
+
+```python
+from ainotate.shoot import shoot
+res = shoot({"url": "https://en.wikipedia.org/wiki/Screenshot",
+             "marks": [{"type": "box",
+                        "target": {"text": "View history"},
+                        "label": "Past edits"}]}, draft=True)
+print(res.paths[0], res.redactions)
+```
 
 ## Features
 
@@ -118,39 +178,6 @@ The output path is printed on stdout. Final images go to
   instead of saving a wrong or unredacted image. Clear exit codes.
 - **Diacritics:** bundled Inter font, so Romanian, German, French and
   other Latin-script labels render correctly everywhere.
-
-## For AI agents
-
-**Skill.** [skill/SKILL.md](https://github.com/dontpayfull/AInotate/blob/main/skill/SKILL.md) is an agent skill (Claude Code
-and other agents that read `SKILL.md`). Copy or link the `skill` folder
-into your agent's skills directory as `ainotate`. It teaches the workflow:
-pick a source, locate exact rects, annotate, **read the image to verify**,
-deliver. References cover the full spec, every browser surface an agent
-may have (Playwright MCP, Chrome DevTools MCP, Claude in Chrome, CDP) and
-the MCP server.
-
-**MCP server.** `ainotate mcp` exposes the same operations to Claude
-Desktop and any MCP client. Each tool returns JSON plus a small preview
-image so the model can check its work. Claude Desktop config:
-
-```json
-{"mcpServers": {
-  "ainotate": {"command": "ainotate", "args": ["mcp"]}}}
-```
-
-Paths for macOS and Windows, permissions and the tool list:
-[skill/references/mcp.md](https://github.com/dontpayfull/AInotate/blob/main/skill/references/mcp.md).
-
-**Python.** The same pipeline is importable:
-
-```python
-from ainotate.shoot import shoot
-res = shoot({"url": "https://en.wikipedia.org/wiki/Screenshot",
-             "marks": [{"type": "box",
-                        "target": {"text": "View history"},
-                        "label": "Past edits"}]}, draft=True)
-print(res.paths[0], res.redactions)
-```
 
 ## Privacy
 
@@ -184,13 +211,6 @@ print(res.paths[0], res.redactions)
 
 **Experimental** means implemented and unit-tested with mocks, not yet
 verified on real Windows or Linux machines. Reports are welcome.
-
-## Exit codes
-
-`0` ok, `1` cannot save, `2` invalid spec or usage, `3` cannot draw
-(no room for a label, rect outside the image), `4` capture failed or an
-optional dependency is missing, `5` a text target is ambiguous, `6` a
-target was not found. Messages say what to fix.
 
 ## License
 
