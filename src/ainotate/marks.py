@@ -92,12 +92,14 @@ def _shape(d, box, shape, radius, **kw):
         d.rounded_rectangle(box, radius=radius, **kw)
 
 
-def draw_loupe(layer, page, sample, box, shape, color, u, path=None):
+def draw_loupe(layer, page, sample, box, shape, color, u, path=None, line=None):
     """Source outline, connector and the loupe itself (zoomed page pixels, white rim, color ring).
     `page` is the image before any mark is drawn (redactions and blur already applied). `path`: a
-    curved connector from the loupe to the sample (routed around page content), else straight."""
+    curved connector from the loupe to the sample (routed around page content), else straight.
+    `line`: width of the connector, source outline and color ring (default from u)."""
     lw, lh = int(box[2] - box[0]), int(box[3] - box[1])
-    line = max(2, round(0.13 * u))
+    ring = line
+    line = line or max(2, round(0.13 * u))
     rad_src = min(0.6 * u, (sample[3] - sample[1]) / 2)
     rad_lp = min(1.3 * u, min(lw, lh) / 4)
     # connector between the facing edges (drawn first: the loupe and outline cover its ends)
@@ -136,7 +138,7 @@ def draw_loupe(layer, page, sample, box, shape, color, u, path=None):
     mask = _aa_mask((lw, lh), lambda d, S: _shape(d, [0, 0, lw * S - 1, lh * S - 1], shape, rad_lp * S, fill=255))
     content.putalpha(mask)
     layer.alpha_composite(content, dest=(int(box[0]), int(box[1])))
-    rim, ring = max(3, round(0.3 * u)), max(2, round(0.1 * u))
+    rim, ring = max(3, round(0.3 * u)), ring or max(2, round(0.1 * u))
     inner = grow(box, -rim / 2)
     aa_draw(layer, box, "white", lambda d, T, S: _shape(d, T(inner), shape, (rad_lp - rim / 2) * S,
                                                         outline="white", width=rim * S))

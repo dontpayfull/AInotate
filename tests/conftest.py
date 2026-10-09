@@ -43,7 +43,8 @@ def isolated_env(tmp_path, monkeypatch):
     home.mkdir()
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.setenv("USERPROFILE", str(home))
-    for v in ("AINOTATE_OUTPUT_DIR", "AINOTATE_BACKUP_DIR", "AINOTATE_PREFIX", "AINOTATE_FONT", "AINOTATE_NEO_DIR"):
+    for v in ("AINOTATE_OUTPUT_DIR", "AINOTATE_BACKUP_DIR", "AINOTATE_PREFIX", "AINOTATE_FONT", "AINOTATE_NEO_DIR",
+              "AINOTATE_LOOK"):
         monkeypatch.delenv(v, raising=False)
     return home
 
