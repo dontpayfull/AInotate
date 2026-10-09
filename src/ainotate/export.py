@@ -117,12 +117,24 @@ def _norm_steps(steps) -> list[dict]:
     return out
 
 
+def _md_text(raw: str) -> str:
+    """Blank line after a "- " list so the next sentence is not read as part of its last item."""
+    out, prev = [], False
+    for line in raw.split("\n"):
+        item = line.strip().startswith(("- ", "* "))
+        if prev and not item and line.strip():
+            out.append("")
+        out.append(line)
+        prev = item
+    return "\n".join(out)
+
+
 def _md(title, intro, steps, image_names) -> str:
     lines = [f"# {title}", ""] if title else []
     if intro:
         lines += [intro.strip(), ""]
     for i, (s, name) in enumerate(zip(steps, image_names), 1):
-        text = s["text"].replace("\n", "\n   ") or f"Step {i}"
+        text = _md_text(s["text"]).replace("\n", "\n   ").replace("\n   \n", "\n\n") or f"Step {i}"
         if s.get("title"):
             lines += [f"{i}. **{s['title']}**", ""] + ([f"   {text}", ""] if s["text"] else [])
             lines += [f"   ![{s['alt'].replace(']', ')').replace('[', '(')}]({name})", ""]

@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 import html
 import mimetypes
+import re
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -25,7 +26,11 @@ img{display:block;max-width:100%;height:auto;border-radius:12px;box-shadow:var(-
 h1,.intro,h2{max-width:860px}
 section.step img{margin-left:42px;max-width:calc(100% - 42px)}
 h2 .t{font-weight:600}
-p.say{max-width:818px;margin:-8px 0 16px 42px;line-height:1.6}
+.say{max-width:818px;margin:-8px 0 16px 42px;line-height:1.6}
+.say p{margin:0 0 8px}
+.say ul{margin:0 0 8px;padding-left:22px}
+.say li{margin:2px 0}
+code{font:.9em/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--line);padding:1px 5px;border-radius:4px}
 img.zoomable{cursor:zoom-in}
 #zoom{position:fixed;inset:0;z-index:10;display:flex;overflow:auto;padding:24px;background:rgba(0,0,0,.94);cursor:zoom-out;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility 0s .2s}
 #zoom.open{opacity:1;visibility:visible;transition:opacity .2s ease}
@@ -48,17 +53,61 @@ _ZOOM_JS = (
 )
 
 
+def _inline(raw: str) -> str:
+    """Escape, then **bold** and `code`."""
+    parts = re.split(r"(`[^`\n]+`)", raw)
+    out = []
+    for k, part in enumerate(parts):
+        if k % 2:
+            out.append(f"<code>{html.escape(part[1:-1])}</code>")
+        else:
+            out.append(re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html.escape(part)))
+    return "".join(out)
+
+
+def _rich(raw: str) -> str:
+    """Step explanation: inline marks, and lines starting with "- " become a list."""
+    blocks, para, items = [], [], []
+    def flush():
+        if para:
+            blocks.append(f"<p>{'<br>'.join(para)}</p>")
+            para.clear()
+        if items:
+            blocks.append(f"<ul>{''.join(f'<li>{i}</li>' for i in items)}</ul>")
+            items.clear()
+    for line in raw.split("\n"):
+        s = line.strip()
+        if s.startswith(("- ", "* ")):
+            if para:
+                flush()
+            items.append(_inline(s[2:]))
+        elif not s:
+            flush()
+        else:
+            if items:
+                flush()
+            para.append(_inline(s))
+    flush()
+    return "".join(blocks)
+
+
+def _plain(raw: str) -> str:
+    """Text for the Pillow PDF: drop the marks, bullets for list lines."""
+    raw = re.sub(r"\*\*(.+?)\*\*", r"\1", raw).replace("`", "")
+    return re.sub(r"(?m)^\s*[-*] ", "• ", raw)
+
+
 def _html(title, intro, steps) -> str:
     parts = []
     for i, s in enumerate(steps, 1):
         mime = mimetypes.guess_type(str(s["image"]))[0] or "image/png"
         b64 = base64.b64encode(s["image"].read_bytes()).decode("ascii")
-        text = html.escape(s["text"]).replace("\n", "<br>")
-        title = html.escape(s.get("title", ""))
+        title = _inline(s.get("title", ""))
         if title:
             head_html = f'<span class="t">{title}</span>'
-            body = f'<p class="say">{text}</p>' if text else ""
+            body = f'<div class="say">{_rich(s["text"])}</div>' if s["text"] else ""
         else:
+            text = "<br>".join(_inline(ln) for ln in s["text"].split("\n"))
             head_html, body = f"<span>{text or f'Step {i}'}</span>", ""
         parts.append(
             f'<section class="step"><h2><span class="n">{i}</span>{head_html}</h2>{body}'
@@ -159,7 +208,7 @@ def _pdf_pillow(title, intro, steps, pdf_path: Path) -> None:
         d.text((M + r, y0 + r), str(i), font=style.load_font(26), fill="white", anchor="mm")
         tf = style.load_font(36)
         st["y"] = y0 + 4
-        text(_wrap(d, "\n".join(x for x in (s.get("title", ""), s["text"]) if x) or f"Step {i}", tf, W - 2 * M - 2 * r - 20), tf, 46, M + 2 * r + 20,
+        text(_wrap(d, _plain("\n".join(x for x in (s.get("title", ""), s["text"]) if x)) or f"Step {i}", tf, W - 2 * M - 2 * r - 20), tf, 46, M + 2 * r + 20,
              (29, 29, 31))
         y = max(st["y"], y0 + 2 * r if st["d"] is d else 0) + 28
         im = _rgb(_open(s["image"]))

@@ -297,6 +297,22 @@ def test_guide_step_title_shows_bold_summary_above_text(tmp_path):
     res = guide([{"image": str(img), "title": "Deploy a model", "text": "Pick one and press Deploy."}],
                 "T", tmp_path / "out", formats=("md", "html"))
     h = res["html"].read_text()
-    assert '<span class="t">Deploy a model</span>' in h and '<p class="say">Pick one and press Deploy.</p>' in h
+    assert '<span class="t">Deploy a model</span>' in h and '<div class="say"><p>Pick one and press Deploy.</p></div>' in h
     md = res["md"].read_text()
     assert "1. **Deploy a model**" in md and "   Pick one and press Deploy." in md
+
+
+def test_guide_step_text_supports_bold_code_and_sublists(tmp_path):
+    from PIL import Image
+    from ainotate.export import guide
+    img = tmp_path / "a.png"
+    Image.new("RGB", (40, 30), "white").save(img)
+    text = "Run `ainotate doctor` first.\n- **Mac:** use brew\n- Linux: <apt>\nDone."
+    res = guide([{"image": str(img), "title": "Install", "text": text}], "T", tmp_path / "out",
+                formats=("md", "html", "pdf"))
+    h = res["html"].read_text()
+    assert "<code>ainotate doctor</code>" in h
+    assert "<ul><li><strong>Mac:</strong> use brew</li><li>Linux: &lt;apt&gt;</li></ul>" in h
+    md = res["md"].read_text()
+    assert "   - **Mac:** use brew" in md and "&lt;apt&gt;</li></ul><p>Done.</p>" in h and "apt>\n\n   Done." in md
+    assert res["pdf"].stat().st_size > 0
