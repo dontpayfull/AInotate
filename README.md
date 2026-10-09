@@ -52,7 +52,9 @@ command line and from Python.
 
 Then `ainotate doctor` checks the machine and prints the exact fix for
 anything missing, including the one command that downloads Chromium for
-web capture.
+web capture. To update later: `brew upgrade ainotate`, `pipx upgrade
+ainotate` or `uv tool upgrade ainotate`; the plugin and the extension
+follow the releases.
 
 **2. Connect it** to the agent you use:
 
@@ -154,8 +156,9 @@ ainotate shoot hn.json --draft    # temp file; drop --draft to save
 
 The output path is printed on stdout. Images are saved to
 `~/Pictures/AInotate` unless you configure another folder. `ainotate --help`
-lists every command (capture, annotate, locate by OCR, grid, zoom, guide,
-compare, animate, copy); the full spec is in
+lists every command (capture, annotate, locate by OCR, grid, zoom, window
+capture with UI element targets, elements, guide, compare, animate, copy,
+install-skill); the full spec is in
 [skill/references/spec.md](https://github.com/dontpayfull/AInotate/blob/main/skill/references/spec.md). Exit codes: `0` ok,
 `1` cannot save, `2` invalid spec, `3` cannot draw, `4` capture failed or an
 optional dependency is missing, `5` ambiguous text target, `6` target not
