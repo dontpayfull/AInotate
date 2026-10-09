@@ -16,6 +16,7 @@ Everything the renderer accepts. `SKILL.md` has the workflow; this file is for l
 | `crop_pad` | margin around the marks for `"auto"` and `"tight"` (default 260 image px at 2000px width) |
 | `dim` | spotlight darkness 0-1 (default 0.55) |
 | `arrow_style` | `"skitch"` (default, tapered), `"straight"`, `"curved"`, or `"line"` |
+| `look` | `"default"`, or a look from an installed package (entry point group `ainotate.looks`, a subclass of `ainotate.render.Look`); also `--look` and the MCP `look` argument |
 | `frame` | backdrop and window chrome, see below |
 | `privacy` | `"off"` (default for images), `"auto"` (OCR the image, redact findings) or an object |
 
@@ -149,9 +150,9 @@ explains it below, and can use `**bold**`, `` `code` `` and lines starting with 
 
 Final images: `<output_dir>/<prefix> <YYYY-MM-DD at HH.MM.SS> <name>.png`, plus an identical
 copy in `backup_dir` if set. Never overwrites (adds " (2)"). Configuration, highest first:
-env `AINOTATE_OUTPUT_DIR`, `AINOTATE_BACKUP_DIR`, `AINOTATE_PREFIX`; then
-`~/.config/ainotate/config.toml` keys `output_dir`, `backup_dir`, `prefix`; then defaults
-`~/Pictures/AInotate`, no backup, prefix `AInotate`.
+env `AINOTATE_OUTPUT_DIR`, `AINOTATE_BACKUP_DIR`, `AINOTATE_PREFIX`, `AINOTATE_LOOK`; then
+`~/.config/ainotate/config.toml` keys `output_dir`, `backup_dir`, `prefix`, `look`; then defaults
+`~/Pictures/AInotate`, no backup, prefix `AInotate`, look `default`. A spec's `look` beats both.
 
 ## More patterns
 
