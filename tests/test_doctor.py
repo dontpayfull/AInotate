@@ -98,8 +98,9 @@ def test_screen_capture_blank_on_mac(monkeypatch):
     monkeypatch.setattr(doctor, "_os", lambda: "Darwin")
 
     def fake_run(cmd, **k):
-        Image.new("RGB", (32, 32), (0, 0, 0)).save(cmd[-1], "PNG")
-        return SimpleNamespace(returncode=0, stderr="")
+        if cmd[0] == "screencapture":   # not `ps` (the permission-owner lookup)
+            Image.new("RGB", (32, 32), (0, 0, 0)).save(cmd[-1], "PNG")
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
     monkeypatch.setattr(doctor.subprocess, "run", fake_run)
     c = doctor.check_screen_capture()
     assert not c.ok and "Screen" in c.fix
