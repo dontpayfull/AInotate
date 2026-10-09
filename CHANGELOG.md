@@ -2,6 +2,11 @@
 
 All notable changes to AInotate.
 
+## 0.1.5 - 2026-10-09
+
+### Changed
+- README: "What it is for", Features and Privacy back to short scannable lists.
+
 ## 0.1.4 - 2026-10-09
 
 ### Added
