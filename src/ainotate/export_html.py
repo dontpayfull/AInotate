@@ -15,16 +15,35 @@ _CSS = """
 @media (prefers-color-scheme:dark){:root{--bg:#1c1c1e;--fg:#f5f5f7;--muted:#98989d;--accent:#2f8cff;--line:#3a3a3c;--shadow:0 2px 6px rgba(0,0,0,.5),0 10px 30px rgba(0,0,0,.5)}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:860px;margin:0 auto;padding:56px 24px 80px}
+main{max-width:1100px;margin:0 auto;padding:56px 24px 80px}
 h1{font-size:2.1rem;line-height:1.2;letter-spacing:-.02em;margin:0 0 12px}
 .intro{color:var(--muted);font-size:1.1rem;margin:0 0 40px}
 section.step{margin:0 0 48px;break-inside:avoid;page-break-inside:avoid}
-h2{display:flex;gap:14px;align-items:flex-start;font-size:1.3rem;line-height:1.35;font-weight:600;margin:0 0 16px;letter-spacing:-.01em}
-h2 .n{flex:none;min-width:2rem;height:2rem;border-radius:1rem;background:var(--accent);color:#fff;font-size:1rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:.05rem}
+h2{display:flex;gap:14px;align-items:flex-start;font-size:1.15rem;line-height:28px;font-weight:400;margin:0 0 16px;letter-spacing:-.01em}
+h2 .n{flex:none;min-width:28px;height:28px;border-radius:14px;background:var(--accent);color:#fff;font-size:1rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 img{display:block;max-width:100%;height:auto;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--line)}
+h1,.intro,h2{max-width:860px}
+section.step img{margin-left:42px;max-width:calc(100% - 42px)}
+img.zoomable{cursor:zoom-in}
+#zoom{position:fixed;inset:0;z-index:10;display:flex;overflow:auto;padding:24px;background:rgba(0,0,0,.94);cursor:zoom-out;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility 0s .2s}
+#zoom.open{opacity:1;visibility:visible;transition:opacity .2s ease}
+#zoom img{max-width:none;margin:auto;box-shadow:none;transform:scale(.96);transition:transform .2s ease}
+#zoom.open img{transform:none}
+@media (prefers-reduced-motion:reduce){#zoom,#zoom img{transition:none}}
 @page{size:A4;margin:16mm}
-@media print{body{background:#fff;color:#000;font-size:12pt}main{max-width:none;padding:0}img{box-shadow:none;border:1px solid #ccc;border-radius:6px}section.step{margin-bottom:22pt}h2 .n{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{#zoom{display:none}body{background:#fff;color:#000;font-size:12pt}main{max-width:none;padding:0}img{box-shadow:none;border:1px solid #ccc;border-radius:6px}section.step{margin-bottom:22pt}section.step img{margin-left:0;max-width:100%}h2 .n{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 """
+
+# Click a step image shown smaller than its real size to see it full size; click or Esc closes.
+_ZOOM_JS = (
+    "const z=document.getElementById('zoom');"
+    "const mark=()=>document.querySelectorAll('section.step img').forEach(i=>"
+    "i.classList.toggle('zoomable',i.naturalWidth>i.clientWidth+4));"
+    "addEventListener('load',mark);addEventListener('resize',mark);"
+    "addEventListener('click',e=>{if(e.target.closest('#zoom')){z.classList.remove('open');return}"
+    "const i=e.target.closest('img.zoomable');if(i){z.firstChild.src=i.src;z.classList.add('open')}});"
+    "addEventListener('keydown',e=>{if(e.key==='Escape')z.classList.remove('open')});"
+)
 
 
 def _html(title, intro, steps) -> str:
@@ -41,7 +60,8 @@ def _html(title, intro, steps) -> str:
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>{html.escape(title or "Guide")}</title><style>{_CSS}</style></head>'
-            f'<body><main>{head}{lead}{"".join(parts)}</main></body></html>')
+            f'<body><main>{head}{lead}{"".join(parts)}</main>'
+            f'<div id="zoom"><img alt=""></div><script>{_ZOOM_JS}</script></body></html>')
 
 
 def _pdf_playwright(html_path: Path, pdf_path: Path) -> None:
