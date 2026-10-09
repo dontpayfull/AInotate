@@ -32,16 +32,16 @@ h2 .t{font-weight:600}
 .say li{margin:2px 0}
 code{font:.9em/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--line);padding:1px 5px;border-radius:4px}
 img.zoomable{cursor:zoom-in}
-#zoom{position:fixed;inset:0;z-index:10;display:flex;overflow:auto;padding:24px;background:rgba(0,0,0,.94);cursor:zoom-out;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility 0s .2s}
+#zoom{position:fixed;inset:0;z-index:10;display:flex;overflow:hidden;padding:24px;background:rgba(0,0,0,.7);cursor:zoom-out;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility 0s .2s}
 #zoom.open{opacity:1;visibility:visible;transition:opacity .2s ease}
-#zoom img{max-width:none;margin:auto;box-shadow:none;transform:scale(.96);transition:transform .2s ease}
+#zoom img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.5);transform:scale(.96);transition:transform .2s ease}
 #zoom.open img{transform:none}
 @media (prefers-reduced-motion:reduce){#zoom,#zoom img{transition:none}}
 @page{size:A4;margin:16mm}
 @media print{#zoom{display:none}body{background:#fff;color:#000;font-size:12pt}main{max-width:none;padding:0}img{box-shadow:none;border:1px solid #ccc;border-radius:6px}section.step{margin-bottom:22pt}section.step img{margin-left:0;max-width:100%}h2 .n{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 """
 
-# Click a step image shown smaller than its real size to see it full size; click or Esc closes.
+# Click a step image shown smaller than its real size to see it as large as the window allows; click or Esc closes.
 _ZOOM_JS = (
     "const z=document.getElementById('zoom');"
     "const mark=()=>document.querySelectorAll('section.step img').forEach(i=>"
