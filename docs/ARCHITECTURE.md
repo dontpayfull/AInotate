@@ -35,7 +35,7 @@ src/ainotate/
                           (prepare_image_spec, called by render) and the web flow
                           url + marks with `target` -> capture -> privacy scan -> render -> save
   mcp_server.py           MCP stdio server exposing the same operations (Claude Desktop etc.)
-skill/                    the agent skill (SKILL.md + references/), uses the `ainotate` CLI
+skills/ainotate/          the agent skill (SKILL.md + references/), uses the `ainotate` CLI
 tests/                    pytest; no network in unit tests; web tests marked `web`
 docs/                     this file
 ```
@@ -100,7 +100,7 @@ docs/                     this file
 
 ## Spec (input to render)
 
-See `skill/SKILL.md`. Marks: step, box, arrow, highlight, spotlight, redact, text, magnify, click,
+See `skills/ainotate/SKILL.md`. Marks: step, box, arrow, highlight, spotlight, redact, text, magnify, click,
 keys, blur, pixelate. All coordinates in one unit; `scale` converts to image pixels. Top-level keys
 beyond the marks: `crop` ("auto" | "tight" | [x1,y1,x2,y2] | {x,y,w,h}), `crop_pad`, `dim`,
 `arrow_style` ("skitch" | "straight" | "curved" | "line"), `name`, `frame` (true | background |

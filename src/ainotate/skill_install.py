@@ -2,7 +2,7 @@
 for apps that take an upload (Claude Desktop, Cowork, claude.ai: Customize > Skills).
 
 The wheel carries the skill as `ainotate/skill` (pyproject force-include); a source checkout
-uses the repository's `skill/` folder.
+uses the repository's `skills/ainotate/` folder.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ class SkillError(OSError):
 
 def source() -> Path:
     here = Path(__file__).resolve().parent
-    for p in (here / "skill", here.parents[1] / "skill"):
+    for p in (here / "skill", here.parents[1] / "skills" / NAME):
         if (p / "SKILL.md").is_file():
             return p
     raise SkillError("the agent skill is not bundled in this install; reinstall: pipx install --force 'ainotate[all]'")

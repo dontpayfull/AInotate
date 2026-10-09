@@ -242,3 +242,24 @@ def test_skill_copy_skips_links(homes, tmp_path, monkeypatch):
     assert not (homes["claude"] / "ainotate" / "leak.txt").exists()
     names = zipfile.ZipFile(skill_install.make_zip(tmp_path / "z")).namelist()
     assert "ainotate/leak.txt" not in names
+
+
+# ---------- one version everywhere ----------
+
+def test_every_manifest_carries_the_package_version():
+    """scripts/bump.py sets these together; a stale one ships a launcher pinned to an old release."""
+    import json
+    import re
+    from pathlib import Path
+
+    import ainotate
+    root = Path(__file__).resolve().parents[1]
+    v = ainotate.__version__
+    assert re.search(rf'^version = "{re.escape(v)}"', (root / "pyproject.toml").read_text(), re.M)
+    for name in (".claude-plugin/plugin.json", "gemini-extension.json", "server.json", "packaging/mcpb/manifest.json"):
+        text = (root / name).read_text()
+        assert json.loads(text)["version"] == v, name
+        assert set(re.findall(r"ainotate\[all\]==([^'\"\s]+)", text)) <= {v}, name
+    for name in (".claude-plugin/plugin.json", "gemini-extension.json"):
+        assert f"ainotate[all]=={v}" in (root / name).read_text(), f"{name}: unpinned uvx"
+    assert (root / "skills" / "ainotate" / "SKILL.md").is_file()

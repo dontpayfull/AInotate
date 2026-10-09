@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ainotate"
-version = "0.1.5"
+version = "0.1.6"
 description = "Annotated screenshots for AI agents: Skitch-style arrows, numbered steps, boxes, labels, solid redaction"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -75,10 +75,10 @@ ainotate = "ainotate.cli:main"
 packages = ["src/ainotate"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"skill" = "ainotate/skill"   # the agent skill ships inside the package: `ainotate install-skill`
+"skills/ainotate" = "ainotate/skill"   # the agent skill ships inside the package: `ainotate install-skill`
 
 [tool.hatch.build.targets.sdist]
-include = ["src/ainotate", "skill", "tests", "docs", "pyproject.toml"]
+include = ["src/ainotate", "skills", "tests", "docs", "pyproject.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

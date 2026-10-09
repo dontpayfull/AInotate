@@ -263,7 +263,7 @@ warning, after widening the crop. Redact (solid) anything sensitive and set an e
 
 def _skill_md() -> Optional[str]:
     here = Path(__file__).resolve()
-    for p in (here.parent / "skill" / "SKILL.md", here.parents[2] / "skill" / "SKILL.md",
+    for p in (here.parent / "skill" / "SKILL.md", here.parents[2] / "skills" / "ainotate" / "SKILL.md",
               Path("~/.agents/skills/ainotate/SKILL.md").expanduser(),
               Path("~/.claude/skills/ainotate/SKILL.md").expanduser()):
         try:

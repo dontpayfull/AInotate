@@ -5,14 +5,14 @@
   "description": "Annotated screenshots for AI agents: steps, Skitch-style arrows, boxes, labels, solid redaction.",
   "repository": {"url": "https://github.com/dontpayfull/AInotate", "source": "github"},
   "websiteUrl": "https://github.com/dontpayfull/AInotate",
-  "version": "0.1.3",
+  "version": "0.1.6",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "ainotate",
-      "version": "0.1.3",
+      "version": "0.1.6",
       "runtimeHint": "uvx",
-      "runtimeArguments": [{"type": "named", "name": "--from", "value": "ainotate[all]==0.1.3"}],
+      "runtimeArguments": [{"type": "named", "name": "--with", "value": "ainotate[all]==0.1.6"}],
       "packageArguments": [{"type": "positional", "value": "mcp"}],
       "transport": {"type": "stdio"}
     }

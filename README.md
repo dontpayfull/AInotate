@@ -6,7 +6,7 @@
 [![PyPI](https://img.shields.io/pypi/v/ainotate)](https://pypi.org/project/ainotate/)
 [![Python](https://img.shields.io/pypi/pyversions/ainotate)](https://pypi.org/project/ainotate/)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](https://github.com/dontpayfull/AInotate/blob/main/LICENSE)
-[![MCP server](https://img.shields.io/badge/MCP-server-8A2BE2)](https://github.com/dontpayfull/AInotate/blob/main/skill/references/mcp.md)
+[![MCP server](https://img.shields.io/badge/MCP-server-8A2BE2)](https://github.com/dontpayfull/AInotate/blob/main/skills/ainotate/references/mcp.md)
 
 ![Hacker News with Skitch-style arrows: Discussion, Post a link and a numbered Sign in step, in a browser window on a sunset gradient](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/skitch-arrows.png)
 
@@ -19,7 +19,8 @@ It captures a web page, a window or a screenshot you already have, finds
 the elements you mean, draws numbered steps, arrows, boxes and labels
 where they hide the least, blacks out emails and tokens, and looks at the
 result before sending it. It works in Claude Code, Cowork, Claude Desktop,
-Cursor and any other MCP client, and from the command line or Python.
+Codex, Gemini CLI, Cursor and any other MCP client, and from the command
+line or Python.
 
 We built it at [DontPayFull](https://www.dontpayfull.com) because our own
 agents kept answering "where is it?" with a paragraph. A picture with a
@@ -65,7 +66,10 @@ marketplace update ainotate`; the Desktop extension by opening the newer
 | Claude Code | `/plugin marketplace add dontpayfull/AInotate`, then `/plugin install ainotate@ainotate`: skill and MCP server in one step |
 | Cowork | Customize > Plugins > Add marketplace > `dontpayfull/AInotate`, then install AInotate |
 | Claude Desktop | download `ainotate-<version>.mcpb` from [Releases](https://github.com/dontpayfull/AInotate/releases/latest) and open it: a one-click extension |
-| Cursor, VS Code, other MCP clients | command `ainotate`, arguments `mcp` (stdio); also listed in the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.dontpayfull/ainotate` |
+| Codex | `codex plugin marketplace add dontpayfull/AInotate`, then `codex plugin add ainotate@ainotate`: skill and MCP server |
+| Gemini CLI | `gemini extensions install https://github.com/dontpayfull/AInotate`: skill and MCP server |
+| Cursor | [![Add AInotate to Cursor](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=ainotate&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyItLWZyb20iLCJhaW5vdGF0ZVthbGxdIiwiYWlub3RhdGUiLCJtY3AiXX0=) (needs [uv](https://docs.astral.sh/uv/)), plus the skill below |
+| VS Code, Cline, other MCP clients | command `ainotate`, arguments `mcp` (stdio); also listed in the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.dontpayfull/ainotate`; agents can follow [llms-install.md](https://github.com/dontpayfull/AInotate/blob/main/llms-install.md) |
 
 ```json
 {"mcpServers": {"ainotate": {"command": "ainotate", "args": ["mcp"]}}}
@@ -83,10 +87,11 @@ plugin brings it along; without the plugin it ships with the package:
 ainotate install-skill             # Claude Code and Codex (~/.claude/skills, ~/.agents/skills)
 ainotate install-skill --zip ~/Desktop   # a ZIP for Claude Desktop, Cowork, claude.ai:
                                          # Customize > Skills > Upload a skill
+npx skills add dontpayfull/AInotate      # any agent the skills CLI knows (Cursor, Windsurf, ...)
 ```
 
 Config paths for every OS, permissions and the tool list:
-[skill/references/mcp.md](https://github.com/dontpayfull/AInotate/blob/main/skill/references/mcp.md).
+[skills/ainotate/references/mcp.md](https://github.com/dontpayfull/AInotate/blob/main/skills/ainotate/references/mcp.md).
 
 **3. Ask.** "Show me where to switch Wikipedia to dark mode." The agent
 captures the page, annotates it, checks it and sends the image. With the
@@ -161,7 +166,7 @@ The output path is printed on stdout. Images are saved to
 lists every command (capture, annotate, locate by OCR, grid, zoom, window
 capture with UI element targets, elements, guide, compare, animate, copy,
 install-skill); the full spec is in
-[skill/references/spec.md](https://github.com/dontpayfull/AInotate/blob/main/skill/references/spec.md). Exit codes: `0` ok,
+[skills/ainotate/references/spec.md](https://github.com/dontpayfull/AInotate/blob/main/skills/ainotate/references/spec.md). Exit codes: `0` ok,
 `1` cannot save, `2` invalid spec, `3` cannot draw, `4` capture failed or an
 optional dependency is missing, `5` ambiguous text target, `6` target not
 found.

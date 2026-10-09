@@ -2,6 +2,6 @@
 # The release workflow sets both versions to the release being built.
 [project]
 name = "ainotate-desktop-extension"
-version = "0.1.3"
+version = "0.1.6"
 requires-python = ">=3.10"
-dependencies = ["ainotate[all]==0.1.3"]
+dependencies = ["ainotate[all]==0.1.6"]

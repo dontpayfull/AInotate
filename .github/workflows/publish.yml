@@ -56,7 +56,7 @@ jobs:
           for p in s["packages"]:
               p["version"] = v
               for a in p.get("runtimeArguments", []):
-                  if a.get("name") == "--from":
+                  if a.get("name") == "--with":
                       a["value"] = f"ainotate[all]=={v}"
           json.dump(s, open("server.json", "w"), indent=2)
           PY

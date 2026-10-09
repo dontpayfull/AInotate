@@ -2,6 +2,24 @@
 
 All notable changes to AInotate.
 
+## 0.1.6 - 2026-10-10
+
+### Added
+- Gemini CLI extension (`gemini-extension.json`): `gemini extensions install
+  https://github.com/dontpayfull/AInotate` brings the skill and the MCP server.
+- Codex: the repository works as a Codex plugin marketplace too
+  (`codex plugin marketplace add dontpayfull/AInotate`).
+- Cursor one-click install link and `npx skills add dontpayfull/AInotate` in the README.
+- `llms-install.md`: install steps an agent (Cline and others) can follow on its own.
+- `glama.json` for the Glama directory; `scripts/bump.py` sets the version in every manifest.
+
+### Changed
+- The skill moved from `skill/` to `skills/ainotate/`, the folder every agent and skill
+  directory looks in. The package still installs it with `ainotate install-skill`.
+- MCP Registry entry: `uvx --with` instead of `--from`, so clients that add the package
+  version to the command (VS Code and others) start the server correctly.
+- The plugin and extension launchers pin `ainotate[all]` to the release they ship with.
+
 ## 0.1.5 - 2026-10-09
 
 ### Changed
