@@ -12,10 +12,11 @@ import inspect
 import json
 import sys
 from pathlib import Path
-from typing import Callable, Optional, Union
+from typing import Annotated, Callable, Optional, Union
 
 import anyio.to_thread
 from mcp import types
+from pydantic import Field
 from PIL import Image
 
 from . import __version__
@@ -94,6 +95,17 @@ def _spec(spec) -> dict:
     return spec
 
 
+LOOK = Annotated[Optional[str], Field(description=(
+    'Mark style: "default" (bold, built in) or the name of an installed look package (e.g. "neat"). '
+    "Omit it to use the spec's look, else the user's default (AINOTATE_LOOK, config.toml). A look "
+    "that is not installed or fails falls back to default with a warning listing the installed looks."))]
+
+
+def _with_look(spec, look):
+    spec = _spec(spec)
+    return dict(spec, look=look) if look and isinstance(spec, dict) else spec
+
+
 # ---------------------------------------------------------------- annotate
 
 def _annotate(spec, draft: bool, debug: bool, tool: str) -> types.CallToolResult:
@@ -120,22 +132,23 @@ def _annotate(spec, draft: bool, debug: bool, tool: str) -> types.CallToolResult
 
 
 @mcp.tool()
-async def annotate(spec: Union[dict, str], draft: bool = True) -> types.CallToolResult:
+async def annotate(spec: Union[dict, str], draft: bool = True, look: LOOK = None) -> types.CallToolResult:
     """Render an annotation spec onto its `input` image. Draft by default (temp dir): check the
     returned preview, then call again with draft=false to save to the output folder.
     spec: {"input": path, "scale": 1|2.., "crop": "auto"|[x1,y1,x2,y2], "name": "...",
     "marks": [{"type": "step"|"box"|"arrow"|"highlight"|"spotlight"|"redact"|"text"|...,
     "rect": {x,y,w,h} or [x1,y1,x2,y2], "label": "...", "n": 1, "color": "look|bad|good|info"}]}.
     Every coordinate in one unit; scale converts it to image px. Full reference: ainotate://spec.
+    look: the mark style, "default" or an installed look such as "neat" (sets spec "look").
     Returns paths, size, warnings, legend (step numbers + labels), redactions and a preview."""
-    return await _run("annotate", lambda: _annotate(spec, draft, False, "annotate"))
+    return await _run("annotate", lambda: _annotate(_with_look(spec, look), draft, False, "annotate"))
 
 
 @mcp.tool()
-async def preview(spec: Union[dict, str]) -> types.CallToolResult:
+async def preview(spec: Union[dict, str], look: LOOK = None) -> types.CallToolResult:
     """Draft render with the debug overlay (cyan target rects, magenta label boxes); saves
-    nothing permanent. Use it to check placement before annotate."""
-    return await _run("preview", lambda: _annotate(spec, True, True, "preview"))
+    nothing permanent. Use it to check placement before annotate. look: as in annotate."""
+    return await _run("preview", lambda: _annotate(_with_look(spec, look), True, True, "preview"))
 
 
 # ---------------------------------------------------------------- web
@@ -180,12 +193,12 @@ async def capture_web(url: Optional[str] = None, cdp_url: Optional[str] = None,
 
 
 @mcp.tool()
-async def shoot(spec: Union[dict, str], draft: bool = True) -> types.CallToolResult:
+async def shoot(spec: Union[dict, str], draft: bool = True, look: LOOK = None) -> types.CallToolResult:
     """One call from URL to annotated image: spec = render spec without input/scale, plus
     url (or cdp_url + page_url_contains), preset, actions, and marks with "target": {...}
     (same forms as capture_web) instead of "rect". Draft by default: check the preview, then
     call again with draft=false to save. Returns paths, warnings, legend, redactions (secrets
-    hidden automatically), the capture's resolved rects and a preview."""
+    hidden automatically), the capture's resolved rects and a preview. look: as in annotate."""
     def work():
         try:
             from .shoot import shoot as _shoot
@@ -196,7 +209,7 @@ async def shoot(spec: Union[dict, str], draft: bool = True) -> types.CallToolRes
                     "fix": "Use capture_web(targets=...) and then annotate(spec) with the returned "
                            "rects and scale."}}, error=True)
             raise
-        res = _shoot(_spec(spec), draft=draft)
+        res = _shoot(_with_look(spec, look), draft=draft)
         paths = [str(p) for p in res.paths]
         jpeg, (w, h) = preview_jpeg(paths[0])
         cap = getattr(res, "capture", None)

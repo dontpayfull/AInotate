@@ -138,6 +138,8 @@ def _result_args(privacy_default):
     return [A("spec", help="spec.json, inline JSON, or - for stdin"),
             A("--draft", "--no-save", dest="draft", action="store_true", help="write to a temp dir"),
             A("--privacy", choices=("auto", "off"), help=f"solid redaction (default: {privacy_default})"),
+            A("--look", help="mark style: default or an installed look such as neat "
+              "(default: AINOTATE_LOOK, then look in config.toml)"),
             A("--copy", action="store_true", help="also put the image on the clipboard"),
             A("--json", action="store_true", help="print JSON status on stdout"),
             A("--debug", action="store_true", help="draw target/label boxes; implies --draft")]
@@ -147,6 +149,8 @@ def _spec_with_flags(a):
     spec = _load_spec(a.spec)
     if a.privacy and isinstance(spec, dict):
         spec["privacy"] = a.privacy
+    if a.look and isinstance(spec, dict):
+        spec["look"] = a.look
     return spec
 
 

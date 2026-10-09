@@ -27,8 +27,12 @@ Marks may use "target": {"text": "Save", "nth"?, "within"?, "exact"?} instead of
 OCR on the input). spec "privacy": "auto" adds solid redactions for secrets OCR reads (default "off"
 here); spec "frame" puts the finished image on a backdrop (beautify.apply_frame, last step).
 
+spec "look": the mark style, "default" (built in) or the name of an installed look package (entry
+point group "ainotate.looks", e.g. "neat"); without it AINOTATE_LOOK, then `look` in config.toml.
+
 Warnings: more than 6 marks, labels over 4 words, labels that overlap each other or cover another
-mark's target, arrows that cross, a magnifier that had to shrink its zoom.
+mark's target, arrows that cross, a magnifier that had to shrink its zoom, a look that is not
+installed or failed (the default look is used then; the warning lists the installed looks).
 
 Layout (crop, labels, badges, loupes) lives in placement.py.
 """
@@ -36,6 +40,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 
 from PIL import Image, ImageDraw, ImageFilter, ImageStat
 
@@ -44,6 +49,7 @@ from .marks import (aa_draw, click_geometry, deemphasize, draw_click, draw_keys,
                     overlap_warnings, route_arrow)
 from .label_plan import Job, plan_labels
 from .placement import RenderError, ContentMap, auto_crop, place_badge, place_label, place_loupe  # noqa: F401
+from .looks import Look, LookFailed, fallback, installed_name, pick  # noqa: F401  (Look: base class)
 from .spec import DECORATIVE, LABELED, open_image, spec_warnings, validate
 from .style import LABEL_FILL, SHADOW, color_of, font_for, load_font, mark_unit, pill_size, rgba, text_color_on
 
@@ -133,7 +139,24 @@ def _outside_crop(i, m, r, crop, scale):
 
 def render(spec: dict, debug: bool = False) -> RenderResult:
     """Validate and draw a spec. SpecError for an invalid spec or unreadable input,
-    RenderError for a valid spec that cannot be drawn."""
+    RenderError for a valid spec that cannot be drawn. When an installed look is in use and
+    anything fails (the look, or AInotate on a value the look gave it), the render is redone from
+    the spec with the default look, with a warning; an error the default look also hits is raised."""
+    try:
+        return _render(spec, debug)
+    except LookFailed as e:
+        warning = str(e)
+    except Exception as e:  # noqa: BLE001 - only with an installed look, see below
+        name = installed_name(spec)
+        if name is None:
+            raise
+        warning = fallback(name, "failed while drawing", e)
+    res = _render(dict(spec, look="default"), debug)
+    res.warnings.insert(0, warning)
+    return res
+
+
+def _render(spec: dict, debug: bool) -> RenderResult:
     from .shoot import prepare_image_spec   # text targets (OCR) and auto privacy -> rects
     n_user = len(validate(spec))
     spec, redactions = prepare_image_spec(spec)
@@ -197,9 +220,9 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
     W, H = img.size
     u = mark_unit(W, H, scale)
     style = spec.get("arrow_style", "skitch")
-    stroke = max(3, round(u / 4))
-    font = load_font(int(1.35 * u))
-    badge_font = load_font(int(1.4 * u))
+    lk = pick(spec, SimpleNamespace(page=page, marks=marks, rects=rects, points=points,
+                                    offset=(ox, oy), scale=scale, u=u), warnings)
+    stroke = lk.stroke
     base_pad = 0.7 * u
 
     def pad_for(m, r):
@@ -216,26 +239,24 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
             key, default = ("radius", 0.5 * u) if m["type"] == "blur" else ("block", 0.9 * u)
             img = deemphasize(img, r, m["type"], m[key] * scale if key in m else default, u)
     over = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    od = ImageDraw.Draw(over)
     spots = [g for m, g in zip(marks, outlines) if m["type"] == "spotlight"]
     if spots:
-        dim = Image.new("RGBA", img.size, (0, 0, 0, int(255 * spec.get("dim", 0.55))))
+        dim = Image.new("RGBA", img.size, (0, 0, 0, int(255 * spec.get("dim", lk.dim))))
         mask = Image.new("L", img.size, 255)
         md = ImageDraw.Draw(mask)
         for g in spots:
-            md.rounded_rectangle(g, radius=int(u), fill=0)
+            md.rounded_rectangle(g, radius=lk.spot_radius, fill=0)
         over.paste(dim, (0, 0), mask)
-    for m, r in zip(marks, rects):
-        if m["type"] == "highlight":   # lighter tint on dark regions (70 reads as a solid block there)
-            dark = ImageStat.Stat(img.convert("L").crop([int(v) for v in r])).mean[0] < 90
-            od.rectangle(r, fill=rgba(color_of(m.get("color")), 45 if dark else 70))
+    for i, (m, r) in enumerate(zip(marks, rects)):
+        if m["type"] == "highlight":
+            lk.highlight(over, img, i, r)
     img = Image.alpha_composite(img, over)
     d = ImageDraw.Draw(img)
 
-    for m, r in zip(marks, rects):
+    for i, (m, r) in enumerate(zip(marks, rects)):
         if m["type"] == "redact":       # solid, never blur: blur can be reversed
             out = m["pad"] * scale if "pad" in m else max(2, 2 * scale)   # default outset: safer
-            d.rectangle(grow(r, out), fill=rgba(color_of(m.get("fill", "#1F1F1F")), 255))
+            d.rectangle(grow(r, out), fill=rgba(color_of(m.get("fill", lk.redact_fill(i))), 255))
 
     # 2) shapes; collect obstacles so labels avoid them
     # placement reads page content (edges = text, lines, icons) before any mark covers it
@@ -247,10 +268,10 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
     d = ImageDraw.Draw(layer)
     obstacles, placed, dbg, badges = [], [], [], []
     targets = [r for r, a in zip(rects, auto) if r and not a]   # highlight/spotlight/redact/arrow too
-    for m, r, g in zip(marks, rects, outlines):
+    for i, (m, r, g) in enumerate(zip(marks, rects, outlines)):
         if m["type"] in ("box", "step"):
             if m.get("box", True):
-                draw_outline(layer, g, color_of(m.get("color")), stroke, int(0.6 * u))
+                lk.outline(layer, i, g)
             obstacles.append(g)
 
     # forced label positions are known up front: reserve them so no badge or auto label lands there
@@ -258,7 +279,7 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
     for i, m in enumerate(marks):
         if m["type"] in LABELED and m.get("label_at"):
             lx, ly = [v * scale for v in m["label_at"]]
-            pw, ph = pill_size(font, m["label"], u)
+            pw, ph = lk.label_size(m["label"])
             forced[i] = clamp_box([lx - ox, ly - oy, lx - ox + pw, ly - oy + ph], W, H)
             if forced[i]:
                 placed.append(forced[i])
@@ -266,11 +287,11 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
     # click / keys-at / magnify have fixed or early positions: lay them out before labels and badges
     own, hard, labels, arrows = {}, [], [], []   # own: box a mark's label and overlap checks refer to
     leaders = []    # loupe connectors (labels avoid them like arrows)
-    key_fonts = {i: font_for("".join(m["keys"]), int(1.15 * u)) for i, m in enumerate(marks) if m["type"] == "keys"}
+    key_fonts = {i: lk.keys_font(i, "".join(m["keys"])) for i, m in enumerate(marks) if m["type"] == "keys"}
     for i, (m, r) in enumerate(zip(marks, rects)):
         if m["type"] == "click":
             x, y = points.get(i) or ((r[0] + r[2]) / 2, (r[1] + r[3]) / 2)
-            draw_click(layer, x, y, color_of(m.get("color")), u)
+            draw_click(layer, x, y, lk.color(i), u)
             own[i] = click_geometry(x, y, u)[2]
             obstacles.append(own[i])
             hard.append(own[i])
@@ -289,7 +310,7 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
             avoid = [o for o in obstacles + targets if o != r]
             box, sample, path = place_loupe(i, m, r, points.get(i), W, H, u, cmap, avoid,
                                             [o for o in targets + hard if o != r], placed, warnings, leaders)
-            draw_loupe(layer, img, sample, box, m.get("shape", "circle"), color_of(m.get("color")), u, path)
+            draw_loupe(layer, img, sample, box, m.get("shape", "circle"), lk.color(i), u, path, lk.loupe_line)
             if path:
                 leaders.append(path)
             own[i] = box
@@ -309,7 +330,7 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
             if not clean:
                 warnings.append(f"mark #{i}: badge overlaps the target (target touches the frame edge); "
                                 "widen the crop")
-            badges.append((b, color_of(m.get("color")), str(m["n"])))   # drawn last, above arrows and labels
+            badges.append((b, i, str(m["n"])))   # drawn last, above arrows and labels
             badge_of[i] = b
             placed.append(b)
 
@@ -319,7 +340,7 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
         if m["type"] in LABELED and m.get("label") and not m.get("label_at"):
             target = own.get(i) or (g if m["type"] != "arrow" else r)
             near = 5 if m["type"] == "arrow" else (3.5 if m.get("arrow", True) else 2)
-            jobs.append(Job(i, target, pill_size(font, m["label"], u),
+            jobs.append(Job(i, target, lk.label_size(m["label"]),
                             [o for o in obstacles + targets if o != target and o != r],
                             [o for o in targets + hard if o != target and o != r], near,
                             dict(arrow=m.get("arrow", True), curve=style in ("skitch", "curved"), style=style,
@@ -334,7 +355,7 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
                             "shorten the label or set label_at")
 
     for i, (m, r, g) in enumerate(zip(marks, rects, outlines)):
-        t, c = m["type"], color_of(m.get("color"))
+        t = m["type"]
         if t in LABELED and m.get("label"):
             target = own.get(i) or (g if t != "arrow" else r)
             lb = forced.get(i)
@@ -351,11 +372,8 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
                 path = route_arrow(edges, lb, target, u, avoid, style, stroke, [a[3] for a in arrows] + leaders)
                 if path_length(path) > 2.8 * u:   # room for a body behind the head
                     arrows.append((i, path[0], path[-1], path))
-                    if style == "line":
-                        draw_arrow(d, path[0], path[-1], c, stroke, u)
-                    else:
-                        draw_arrow_skitch(layer, gray, path[0], path[-1], c, u, path)
-            draw_pill(layer, lb, m["label"], font, c, u)
+                    lk.arrow(layer, gray, i, path, style, badge_of.get(i))
+            lk.label(layer, img, i, lb, m["label"])
             dbg.append(lb)
             labels.append((i, lb))
         if t == "keys" and i not in points:   # beside its rect, like a label without an arrow
@@ -373,21 +391,21 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
             labels.append((i, kb))
         if t == "text":
             x, y = [v * scale for v in m["at"]]
-            pw, ph = pill_size(font, m["text"], u)
+            pw, ph = lk.label_size(m["text"])
             tb = clamp_box([x - ox, y - oy, x - ox + pw, y - oy + ph], W, H)
             if tb is None:
                 raise RenderError(f"mark #{i} (text): note {m['text']!r} is larger than the frame; widen the "
                                   "crop or shorten it")
-            draw_pill(layer, tb, m["text"], font, c, u)
+            lk.label(layer, img, i, tb, m["text"])
             placed.append(tb)
             dbg.append(tb)
             labels.append((i, tb))
 
-    for b, c, n in badges:
-        draw_badge(layer, b, c, n, badge_font, max(2, round(0.12 * u)))
+    for b, i, n in badges:
+        lk.badge(layer, img, i, b, n)
 
     # Skitch-style soft drop shadow under all marks, then the marks themselves
-    opacity, dy, blur = SHADOW
+    opacity, dy, blur = lk.shadow
     alpha = layer.getchannel("A").filter(ImageFilter.GaussianBlur(blur * u))
     shadow = Image.new("RGBA", img.size, (0, 0, 0, 0))
     shadow.paste(Image.new("RGBA", img.size, (0, 0, 0, 255)), (0, round(dy * u)),

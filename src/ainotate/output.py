@@ -60,6 +60,14 @@ def load_config() -> Config:
     return Config(Path(out).expanduser(), Path(bak).expanduser() if bak else None, prefix)
 
 
+def default_look() -> str:
+    """The look for a spec without "look": env AINOTATE_LOOK > config.toml `look` > "default"."""
+    look = os.environ.get("AINOTATE_LOOK")
+    if not look:
+        look = _read_config_file(CONFIG_PATH).get("look")
+    return look if isinstance(look, str) and look else "default"
+
+
 def safe_component(value: str, what: str = "name") -> str:
     """`value` if it is one plain file-name component: no path separators, no '..', no control
     characters, not '.'; else OutputError (a bad prefix must not write outside the folder)."""

@@ -100,6 +100,8 @@ def validate(spec):
         errs.append("spec: 'crop_pad' must be a number >= 0")
     if spec.get("arrow_style", "skitch") not in ("skitch", "straight", "curved", "line"):
         errs.append("spec: 'arrow_style' must be skitch, straight, curved or line")
+    if "look" in spec and not (isinstance(spec["look"], str) and spec["look"]):
+        errs.append("spec: 'look' must be a look name (\"default\" or an installed look)")
     if "name" in spec and not isinstance(spec["name"], str):
         errs.append("spec: 'name' must be a string")
     if "marks" not in spec:
