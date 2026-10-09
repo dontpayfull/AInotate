@@ -1,4 +1,9 @@
-# AInotate
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/brand/ainotate-logo-dark.png">
+    <img alt="AInotate" src="https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/brand/ainotate-logo.png" width="360">
+  </picture>
+</h1>
 
 **Annotated screenshots for AI agents: the agent shows you the button instead of describing where it is.**
 

@@ -2,7 +2,11 @@
 
 All notable changes to AInotate.
 
-## Unreleased
+## 0.1.7 - 2026-10-10
+
+### Added
+- A logo: a winking mouse pointer (`docs/brand/`), used in the README, the Desktop extension
+  and the directory listings.
 
 ### Fixed
 - The MCP server reports its version and website in `serverInfo` (was an empty version).
