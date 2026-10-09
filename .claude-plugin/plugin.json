@@ -1,6 +1,6 @@
 {
   "name": "ainotate",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Annotated screenshots for AI agents: numbered steps, Skitch-style arrows, boxes, labels and solid redaction, placed where they cover the least content. Skill plus MCP server.",
   "author": {"name": "DontPayFull", "url": "https://www.dontpayfull.com"},
   "homepage": "https://github.com/dontpayfull/AInotate",

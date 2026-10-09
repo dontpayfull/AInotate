@@ -1,6 +1,6 @@
 # AInotate
 
-**Annotated screenshots for AI agents. Show, don't describe.**
+**Annotated screenshots for AI agents: the agent shows you the button instead of describing where it is.**
 
 [![Tests](https://github.com/dontpayfull/AInotate/actions/workflows/tests.yml/badge.svg)](https://github.com/dontpayfull/AInotate/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/ainotate)](https://pypi.org/project/ainotate/)
@@ -10,35 +10,37 @@
 
 ![Hacker News with Skitch-style arrows: Discussion, Post a link and a numbered Sign in step, in a browser window on a sunset gradient](https://raw.githubusercontent.com/dontpayfull/AInotate/main/docs/images/skitch-arrows.png)
 
-> **You:** How do I post a link on Hacker News?
->
-> **Agent without AInotate:** "In the orange bar at the top of the page, find
-> *submit*, the last link after *jobs*..."
->
-> **Agent with AInotate:** sends the image above. "Click *submit*, where the
-> blue arrow points."
+Ask an agent how to post a link on Hacker News and you usually get
+directions: the orange bar at the top, the last link after *jobs*. With
+AInotate it sends the picture above instead and says "click *submit*,
+where the blue arrow points".
 
-AInotate lets an AI agent answer "where" and "how" questions with a picture:
-it captures a web page, a window or any screenshot, finds the elements, adds
-numbered steps, Skitch-style arrows, boxes and labels where they cover the
-least content, blacks out secrets, and checks the result before sending it.
-It works in Claude Code, Claude Desktop, Cursor and any MCP client, from the
-command line and from Python.
+It captures a web page, a window or a screenshot you already have, finds
+the elements you mean, draws numbered steps, arrows, boxes and labels
+where they hide the least, blacks out emails and tokens, and looks at the
+result before sending it. It works in Claude Code, Cowork, Claude Desktop,
+Cursor and any other MCP client, and from the command line or Python.
+
+We built it at [DontPayFull](https://www.dontpayfull.com) because our own
+agents kept answering "where is it?" with a paragraph. A picture with a
+number on the right button settles the question in a second, in a chat,
+a ticket or a guide.
 
 ## What it is for
 
-- **"Where is it?"** Settings, menus, buttons that hide behind icons. The
-  agent answers with the screen itself, the control boxed and numbered.
-- **"Walk me through it."** One image per step, in the order to follow;
-  `ainotate guide` turns them into a Markdown, HTML or PDF guide.
-- **"Your turn."** A permission switch, a 2FA code, a payment or consent
-  screen: the agent does not click for you. It shows exactly what to press
-  and says what the click does.
-- **Bug reports and tickets.** What is wrong, outlined in red, what is
-  right in green, emails and tokens blacked out before anyone sees them.
-- **Docs and changelogs.** Screenshots that point at the thing the text
-  talks about, re-shot from the same spec when the UI changes; before and
-  after plates for a change.
+The obvious case is "where is it?": a setting three menus deep, a button
+that is only an icon. The agent replies with the screen, the control boxed
+and numbered. For "walk me through it" it makes one image per step, and
+`ainotate guide` binds them into a Markdown, HTML or PDF guide.
+
+Some steps belong to you, not the agent: a permission switch, a 2FA code,
+a payment or consent screen. The agent doesn't click those. It shows what
+to press and says what the click will do.
+
+It also helps with bug reports (what is wrong in red, what is right in
+green, personal data blacked out before anyone sees it) and with docs,
+where the screenshot points at the thing the text is about and can be
+re-shot from the same spec when the UI changes.
 
 ## Set it up in your agent
 
@@ -178,56 +180,52 @@ print(res.paths[0], res.redactions)
 
 ## Features
 
-- **Marks:** numbered `step`, `box`, `arrow`, `click` ripple, `keys`
-  (keycaps), `magnify` (loupe), `highlight`, `spotlight`, `text`, solid
-  `redact`, and decorative `blur` / `pixelate`.
-- **Placement that reads well:** labels go to free space near their
-  target and are planned together; arrows are tapered Skitch-style
-  shapes with a soft shadow that curve around text (see
-  [Labels that stay off the content](#labels-that-stay-off-the-content)).
-  Warnings for overlapping labels, crossing arrows, more than 6 marks or
-  labels over 4 words.
-- **Web capture in one call:** `ainotate shoot` opens a page (laptop, wide
-  or phone preset), runs actions (click, fill, wait, scroll), measures
-  each target, redacts, annotates and saves.
-- **Any browser:** its own Playwright Chromium, Firefox or WebKit, or
-  attach over CDP to a Chromium you already use and are logged into
-  (Chrome, Edge, Brave, Arc, BrowserOS). The preset is applied to that one
-  tab and restored afterwards.
-- **Any image:** `locate` finds text by OCR (Apple Vision, Windows OCR or
-  Tesseract); `grid` and `zoom` locate icons at full resolution. Screen,
-  window and clipboard capture are built in.
-- **Desktop apps on macOS:** `ainotate window ID --target` measures
-  buttons, switches and fields through the Accessibility API, so marks sit
-  exactly on the control, icons included; `ainotate elements --app NAME`
-  lists what it can find.
-- **Frames:** gradient backgrounds (auto from the screenshot, or presets),
-  rounded corners, shadow, browser or window chrome, social aspect ratios.
-- **Sharing:** guides in Markdown, HTML and PDF; before/after plates;
-  APNG and GIF animations; copy to the clipboard.
-- **Strict specs:** a typo stops the run with a list of every problem
-  instead of saving a wrong or unredacted image. Clear exit codes.
-- **Diacritics:** bundled Inter font, so Romanian, German, French and
-  other Latin-script labels render correctly everywhere.
+**What it draws.** Numbered steps, boxes, arrows with labels, a click
+ripple, keycaps for shortcuts, a magnifier for small controls,
+highlights, a spotlight that dims everything else, free text, and solid
+redaction (`blur` and `pixelate` exist too, for clutter only). Labels go
+to free space and are planned together, as described
+[above](#labels-that-stay-off-the-content). It warns when labels overlap,
+arrows cross, or a frame carries more than six marks.
+
+**Where the images come from.** `ainotate shoot` opens a page in a
+laptop, wide or phone viewport, runs clicks and form fills, finds each
+target by text, role or CSS selector, redacts, draws and saves in one
+call. It uses its own Chromium, Firefox or WebKit, or attaches over CDP to
+a Chromium you are already logged into (Chrome, Edge, Brave, Arc,
+BrowserOS) and puts that tab back the way it was. Any other image works
+too: `locate` finds text by OCR (Apple Vision, Windows OCR or Tesseract),
+`grid` and `zoom` pin down icons, and screen, window and clipboard capture
+are built in. On macOS, `ainotate window ID --target` reads buttons,
+switches and fields straight from the Accessibility API, so a mark sits
+exactly on the control even when it is just an icon.
+
+**What you can do with them.** Frame them on a gradient with browser or
+window chrome, build guides in Markdown, HTML or PDF, put a before and an
+after side by side, make an APNG or GIF, or copy the result to the
+clipboard. A spec with a typo stops with every problem listed rather than
+saving a wrong or unredacted image, and every failure has its own exit
+code. The bundled Inter font renders accents and diacritics the same on
+every machine.
 
 ## Privacy
 
-- **Redaction is solid.** `redact` paints an opaque block. AInotate never
-  uses blur to hide data: blur and pixelation can be reversed. `blur` and
-  `pixelate` exist only to de-emphasize clutter, and a mark flagged
-  `"sensitive": true` is refused for them.
-- **Automatic redaction is on for web shots.** `shoot` scans the live
-  page (text and input values) for emails, phone numbers, card numbers,
-  IBANs, API keys, tokens, JWTs, password and personal-data fields, and
-  blacks them out. On images it runs on OCR when you pass
-  `--privacy auto`. You can allow-list your own addresses or add regexes.
-- **It is best-effort.** Detection misses things: text drawn in images or
-  canvas, unusual formats, data split across elements, embedded frames
-  from other sites (reported, not redacted). Always look at the image
-  before you share it. The skill makes this check mandatory for agents.
-- **Local.** Capture, OCR and rendering run on your machine. AInotate makes
-  no network requests of its own beyond loading the pages you ask it to
-  capture.
+Redaction paints a solid block. AInotate never blurs data to hide it,
+because blur and pixelation can be reversed; marks flagged
+`"sensitive": true` are refused for them.
+
+On web shots automatic redaction is on: before the screenshot, `shoot`
+reads the live page, input values included, and blacks out emails, phone
+numbers, card numbers, IBANs, API keys, tokens, JWTs and password or
+personal-data fields. On images it does the same by OCR when you pass
+`--privacy auto`. You can allow-list your own addresses and add patterns.
+
+Detection is best-effort. It can miss text drawn into images or canvas,
+odd formats, data split across elements, and frames embedded from other
+sites (those are reported, not redacted). Look at the image before you
+share it; the skill makes agents do exactly that. Everything runs on your
+machine, and AInotate makes no network requests beyond the pages you ask
+it to capture.
 
 ## Platform support
 

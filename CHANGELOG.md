@@ -2,6 +2,16 @@
 
 All notable changes to AInotate.
 
+## 0.1.4 - 2026-10-09
+
+### Added
+- Homebrew: `brew install dontpayfull/tap/ainotate` (tap `dontpayfull/homebrew-tap`, follows
+  each PyPI release on its own).
+
+### Changed
+- README rewritten in plain prose: why we built it, what it is for, features and privacy;
+  install options as a table, every CLI command, how to update each install.
+
 ## 0.1.3 - 2026-10-09
 
 ### Added

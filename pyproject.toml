@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ainotate"
-version = "0.1.3"
+version = "0.1.4"
 description = "Annotated screenshots for AI agents: Skitch-style arrows, numbered steps, boxes, labels, solid redaction"
 readme = "README.md"
 requires-python = ">=3.10"
