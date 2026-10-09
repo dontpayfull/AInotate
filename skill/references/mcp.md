@@ -69,7 +69,7 @@ config file.
 | `preview` | draft with the debug overlay (cyan rects, magenta label boxes) |
 | `locate` | OCR: rect of a visible text on any image; flags ambiguous matches |
 | `grid`, `zoom` | locate icons and unlabeled areas at full resolution |
-| `capture_screen`, `list_windows`, `capture_window`, `clipboard_image` | desktop sources |
+| `capture_screen`, `list_windows`, `capture_window`, `clipboard_image` | desktop sources; `capture_window(id, targets)` measures macOS UI elements |
 | `make_guide` | Markdown / HTML / PDF guide from annotated steps (`draft: true` by default) |
 | `compare` | before/after plate (`draft: true` by default) |
 | `animate` | APNG or GIF from several images (`draft: true` by default) |

@@ -188,14 +188,39 @@ def check_cdp() -> Check:
                      required=False)
 
 
+def _comm(pid: int) -> str:
+    r = subprocess.run(["ps", "-o", "comm=", "-p", str(pid)], capture_output=True, text=True, timeout=5)
+    return r.stdout.strip()
+
+
+def responsible_app() -> str | None:
+    """The app macOS checks privacy permissions against when it runs ainotate (its "responsible
+    process"): Terminal, Claude, Cursor... as the outermost .app bundle name, or the bare binary
+    (python3.13, when started outside any app, e.g. under a detached tmux)."""
+    if _os() != "Darwin":
+        return None
+    try:
+        import ctypes
+        f = ctypes.CDLL(None).responsibility_get_pid_responsible_for_pid
+        f.argtypes, f.restype = [ctypes.c_int], ctypes.c_int
+        comm = _comm(f(os.getpid()))
+    except (AttributeError, OSError, subprocess.SubprocessError):
+        return None
+    if ".app/" in comm:
+        return os.path.basename(comm.split(".app/")[0]) or None
+    return os.path.basename(comm) or None
+
+
 def check_screen_capture() -> Check:
     if _os() != "Darwin":
         return Check("screen capture", True, f"skipped (macOS permission check; {_os()} needs none)",
                      required=False)
     fd, name = tempfile.mkstemp(prefix="ainotate-doctor-", suffix=".png")
     os.close(fd)
-    fix = ("System Settings > Privacy & Security > Screen & System Audio Recording: enable the app "
-           "running this command, then restart it  "
+    app = responsible_app()
+    fix = ("System Settings > Privacy & Security > Screen & System Audio Recording: enable "
+           + (f"{app} (macOS asks the app that started ainotate)" if app else "the app running this command")
+           + ", then restart it  "
            "(open \"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture\")")
     try:
         r = subprocess.run(["screencapture", "-x", "-R0,0,32,32", name], capture_output=True,
@@ -210,7 +235,8 @@ def check_screen_capture() -> Check:
         if all(lo == hi == 0 for lo, hi in extrema):
             return Check("screen capture", False, "capture is blank: permission missing", fix,
                          required=False)
-        return Check("screen capture", True, "screencapture returns real pixels", required=False)
+        return Check("screen capture", True, "screencapture returns real pixels"
+                     + (f" (macOS permissions belong to {app})" if app else ""), required=False)
     except FileNotFoundError:
         return Check("screen capture", False, "`screencapture` not found", "", required=False)
     except subprocess.TimeoutExpired:

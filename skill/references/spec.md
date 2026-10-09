@@ -124,6 +124,9 @@ redacted. Auto-redaction is a safety net, not a guarantee: read the image before
 | `locate IMG TEXT` | OCR text -> `[x1,y1,x2,y2]`: `--all`, `--json`, `--nth`, `--within`, `--exact`, `--lang`, `--backend` |
 | `grid IMG` / `zoom IMG x1 y1 x2 y2` / `info IMG` | find positions by eye, at full resolution |
 | `screen`, `windows [FILTER]`, `window ID`, `clipboard` | desktop sources |
+| `window ID --target NAME=JSON` | macOS: rects of UI elements (`{"element", "role"?, "nth"?, "exact"?}`) in window points plus the spec `scale`, as JSON |
+| `elements --app NAME` | macOS: the labeled UI elements of a running app (`--role`, `--filter`, `--json`) |
+| `install-skill` | copy this skill to `~/.claude/skills` and `~/.agents/skills`; `--zip PATH` for an upload |
 | `guide [STEPS]` | Markdown + HTML (+ PDF) guide: `--step IMG TEXT` (repeatable), `--formats md,html,pdf`, `--title`, `--intro`, `--out-dir` |
 | `compare A B` | before/after plate: `--labels`, `--layout side/stack/auto` |
 | `animate FRAMES...` | APNG (default) or `--format gif`, `--duration ms`, `--crossfade ms` |

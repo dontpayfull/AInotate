@@ -2,6 +2,24 @@
 
 All notable changes to AInotate.
 
+## 0.1.2 - 2026-10-09
+
+### Added
+- `ainotate install-skill`: the agent skill now ships inside the package and installs into
+  `~/.claude/skills` (Claude Code) and `~/.agents/skills` (Codex and others); `--zip` writes an
+  upload for Claude Desktop, Cowork and claude.ai.
+- macOS UI element targets: `ainotate window ID --target NAME='{"element": "Allow"}'` and the
+  MCP `capture_window(id, targets)` measure buttons, switches and fields through the
+  Accessibility API; `ainotate elements --app NAME` lists them.
+- Skill and MCP instructions: steps only the user may take (permissions, 2FA, payments) are
+  shown, never clicked, with what the click does.
+- CI: unit tests on macOS and Linux for every push.
+
+### Changed
+- `doctor` names the app macOS gives privacy permissions to (Terminal, Claude, Cursor...),
+  instead of "the app running this command".
+- README: what AInotate is for, setup per agent first, Cowork, badges.
+
 ## 0.1.1 - 2026-10-07
 
 ### Changed

@@ -14,6 +14,8 @@ number. Plain-text or code answers: skip it.
 - Reporting a bug found during browsing, testing, or scraping.
 - Whenever you are about to use spatial words ("top right", "under the second menu", "left sidebar").
 - Verifying UI changes: before and after.
+- A step only the user may take: a permission switch, a 2FA code, a payment or consent screen,
+  a CAPTCHA. Do not click it for them: show exactly what to press, and say what the click does.
 
 CLI `ainotate` (fallback `python -m ainotate`); `ainotate doctor` checks the machine. Every spec
 option: `references/spec.md`. Exit codes: 2 bad spec, 3 cannot draw, 4 capture failed or a
@@ -27,7 +29,7 @@ which, or pass `nth`), 6 target not found (closest text listed). Fix the spec, n
 | Public web page | `ainotate shoot spec.json`: capture, find targets, redact, annotate, save |
 | Logged-in page | the same spec with `"cdp_url"` + `"page_url_contains"` (user's running browser). **Read `references/browsers.md`** for every browser surface |
 | User's screenshot | their file; clipboard: `ainotate clipboard` |
-| Desktop app | `ainotate windows <app>`, then `ainotate window <id>`; `ainotate screen` |
+| Desktop app | `ainotate windows <app>`, then `ainotate window <id>` (macOS: add `--target` for exact control boxes, below); `ainotate screen` |
 
 Never move or resize the user's windows; capture and crop.
 
@@ -37,6 +39,9 @@ The image you see when you Read a file is downscaled; positions read off it are 
 - Web: `"target"` on each mark (`shoot` resolves it), or `ainotate capture URL --target
   save='{"text": "Save"}'` for rects in CSS px plus the `scale`. Targets: `{"text"}`,
   `{"selector"}`, `{"role", "name"}`, optional `within`, `nth`, `exact`.
+- Desktop apps on macOS: `ainotate window <id> --target allow='{"element": "Allow", "role":
+  "button"}'` returns rects in window points plus the `scale` (Accessibility; exact even for
+  icons). `ainotate elements --app "System Settings"` lists the labels it can match.
 - Images with text: `ainotate locate img.png "Save"` (OCR), or `"target": {"text": "Save"}`.
 - Icons: `ainotate grid img.png`, then `ainotate zoom img.png x1 y1 x2 y2` (fine grid in source
   px; one zoom per element, under ~500px wide). `ainotate info img.png` gives the real size.

@@ -2,6 +2,7 @@
 
 **Annotated screenshots for AI agents. Show, don't describe.**
 
+[![Tests](https://github.com/dontpayfull/AInotate/actions/workflows/tests.yml/badge.svg)](https://github.com/dontpayfull/AInotate/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/ainotate)](https://pypi.org/project/ainotate/)
 [![Python](https://img.shields.io/pypi/pyversions/ainotate)](https://pypi.org/project/ainotate/)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)](https://github.com/dontpayfull/AInotate/blob/main/LICENSE)
@@ -24,6 +25,21 @@ least content, blacks out secrets, and checks the result before sending it.
 It works in Claude Code, Claude Desktop, Cursor and any MCP client, from the
 command line and from Python.
 
+## What it is for
+
+- **"Where is it?"** Settings, menus, buttons that hide behind icons. The
+  agent answers with the screen itself, the control boxed and numbered.
+- **"Walk me through it."** One image per step, in the order to follow;
+  `ainotate guide` turns them into a Markdown, HTML or PDF guide.
+- **"Your turn."** A permission switch, a 2FA code, a payment or consent
+  screen: the agent does not click for you. It shows exactly what to press
+  and says what the click does.
+- **Bug reports and tickets.** What is wrong, outlined in red, what is
+  right in green, emails and tokens blacked out before anyone sees them.
+- **Docs and changelogs.** Screenshots that point at the thing the text
+  talks about, re-shot from the same spec when the UI changes; before and
+  after plates for a change.
+
 ## Set it up in your agent
 
 **1. Install** (Python 3.10+):
@@ -38,7 +54,7 @@ ainotate doctor                # checks this machine, prints the exact fix for a
 | Agent | How |
 |---|---|
 | Claude Code | `claude mcp add ainotate -- ainotate mcp`, plus the skill (below) for the full workflow |
-| Claude Desktop, Cowork | add the server to `claude_desktop_config.json` (below) and restart Claude |
+| Claude Desktop, Cowork | add the server to `claude_desktop_config.json` (below), restart Claude, upload the skill ZIP (below) |
 | Cursor | add the same server to `~/.cursor/mcp.json` |
 | Any MCP client | command `ainotate`, arguments `mcp` (stdio) |
 
@@ -50,12 +66,13 @@ desktop app, so keep the app open while a task uses it.
 ```
 
 The **skill** teaches an agent when and how to annotate: pick a source,
-find exact positions, annotate, read the image to verify, deliver. For
-Claude Code and other agents that read `SKILL.md`:
+find exact positions, annotate, read the image to verify, deliver. It
+ships with the package:
 
 ```bash
-git clone --depth 1 https://github.com/dontpayfull/AInotate ~/.ainotate
-mkdir -p ~/.claude/skills && ln -s ~/.ainotate/skill ~/.claude/skills/ainotate
+ainotate install-skill             # Claude Code and Codex (~/.claude/skills, ~/.agents/skills)
+ainotate install-skill --zip ~/Desktop   # a ZIP for Claude Desktop, Cowork, claude.ai:
+                                         # Customize > Skills > Upload a skill
 ```
 
 Config paths for every OS, permissions and the tool list:
@@ -170,6 +187,10 @@ print(res.paths[0], res.redactions)
 - **Any image:** `locate` finds text by OCR (Apple Vision, Windows OCR or
   Tesseract); `grid` and `zoom` locate icons at full resolution. Screen,
   window and clipboard capture are built in.
+- **Desktop apps on macOS:** `ainotate window ID --target` measures
+  buttons, switches and fields through the Accessibility API, so marks sit
+  exactly on the control, icons included; `ainotate elements --app NAME`
+  lists what it can find.
 - **Frames:** gradient backgrounds (auto from the screenshot, or presets),
   rounded corners, shadow, browser or window chrome, social aspect ratios.
 - **Sharing:** guides in Markdown, HTML and PDF; before/after plates;
@@ -205,6 +226,7 @@ print(res.paths[0], res.redactions)
 | Annotate, frames, export | verified | experimental | experimental |
 | Web capture (Playwright, CDP) | verified | experimental | experimental |
 | Screen and window capture | verified | experimental | experimental (X11) |
+| UI elements (`window --target`, `elements`) | verified (Accessibility) | not yet | not yet |
 | OCR (`locate`, text targets) | verified (Vision) | experimental (Windows OCR) | experimental (Tesseract) |
 | Clipboard | verified | experimental | experimental |
 | MCP server | verified | experimental | experimental |

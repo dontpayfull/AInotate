@@ -282,11 +282,24 @@ async def list_windows(filter: Optional[str] = None) -> types.CallToolResult:
 
 
 @mcp.tool()
-async def capture_window(id: Union[int, str]) -> types.CallToolResult:
-    """Capture one window by id from list_windows (never moves or resizes it)."""
+async def capture_window(id: Union[int, str], targets: Optional[dict] = None) -> types.CallToolResult:
+    """Capture one window by id from list_windows (never moves or resizes it). macOS: targets
+    {name: {"element": label, "role"?, "nth"?, "exact"?}} measures UI elements (Accessibility) and
+    returns rects plus the scale to put in the annotate spec."""
     def work():
         from .capture import desktop
-        return _captured("capture_window", desktop.window(id), {"window_id": id})
+        path = desktop.window(id)
+        if not targets:
+            return _captured("capture_window", path, {"window_id": id})
+        from PIL import Image
+        from .capture import ax
+        w = desktop._find(id)
+        if not w:
+            raise desktop.CaptureError(f"window {id} is gone; call list_windows again")
+        with Image.open(path) as im:
+            m = ax.window_targets(w, im.size, targets)
+        return _captured("capture_window", path, {"window_id": id, **m, "next": "annotate with these rects "
+                         "and \"scale\": %s (rects are in window points)." % m["scale"]})
     return await _run("capture_window", work)
 
 

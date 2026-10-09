@@ -32,6 +32,7 @@ LAZY = {
     "screen": ("ainotate.capture.desktop", "desktop"), "windows": ("ainotate.capture.desktop", "desktop"),
     "window": ("ainotate.capture.desktop", "desktop"), "clipboard": ("ainotate.capture.clipboard", "desktop"),
     "locate": ("ainotate.ocr", "ocr"), "mcp": ("ainotate.mcp_server", "mcp"),
+    "elements": ("ainotate.capture.ax", "desktop"),
 }
 # pip distribution behind a missing top-level module
 _PROVIDES = {"playwright": "web", "mcp": "mcp", "anyio": "mcp", "mss": "desktop", "Quartz": "desktop",
@@ -40,9 +41,9 @@ _PROVIDES = {"playwright": "web", "mcp": "mcp", "anyio": "mcp", "mss": "desktop"
 GROUPS = [
     ("Annotate", ["annotate", "shoot"]),
     ("Capture", ["capture", "screen", "windows", "window", "clipboard", "neo-latest"]),
-    ("Find things on an image", ["locate", "grid", "zoom", "info"]),
+    ("Find things on an image", ["locate", "grid", "zoom", "info", "elements"]),
     ("Share", ["guide", "animate", "compare", "copy"]),
-    ("Setup", ["doctor", "mcp"]),
+    ("Setup", ["doctor", "install-skill", "mcp"]),
 ]
 COMMANDS: dict = {}   # name -> (summary, example, [(flags, kwargs)], run)
 
@@ -254,12 +255,6 @@ def run_windows(a):
                          f"{b.get('x', 0)},{b.get('y', 0)},{b.get('w', 0)},{b.get('h', 0)}"]))
 
 
-@command("window", "capture one window by id (from `windows`) [desktop]", "ainotate window 4711",
-         [A("id"), A("--out", metavar="PATH")])
-def run_window(a):
-    _print_image(_mod("window").window(a.id, a.out))
-
-
 @command("clipboard", "save the image on the clipboard", "ainotate clipboard --out ~/Desktop/pasted.png",
          [A("--out", metavar="PATH")])
 def run_clipboard(a):
@@ -412,27 +407,12 @@ def run_copy(a):
     print(f"copied: {a.image}", file=sys.stderr)
 
 
-# ---------------------------------------------------------------- setup
-
-@command("doctor", "check this machine: capture, OCR, browser, output folder", "ainotate doctor --json",
-         [A("--json", action="store_true", help="machine-readable output")])
-def run_doctor(a):
-    from .doctor import cli_doctor
-    if cli_doctor(["--json"] if a.json else []):
-        raise CliExit(EXIT_CAPTURE)   # a required check failed
-
-
-@command("mcp", "run the MCP stdio server (Claude Desktop, any MCP client) [mcp]", "ainotate mcp")
-def run_mcp(a):
-    _mod("mcp").main()
-
-
 # ---------------------------------------------------------------- argparse
 
 def _overview():
     lines = []
     for group, names in GROUPS:
-        lines += [f"{group}:"] + [f"  {n:<11} {COMMANDS[n][0]}" for n in names] + [""]
+        lines += [f"{group}:"] + [f"  {n:<14} {COMMANDS[n][0]}" for n in names] + [""]
     return "\n".join(lines + ["`ainotate COMMAND --help` shows its options and an example.",
                               "[web] [desktop] [ocr] [mcp] = needs that extra: pip install 'ainotate[all]'"])
 
@@ -442,6 +422,7 @@ def _exit_codes():
 
 
 def build_parser():
+    from . import cli_extra  # noqa: F401  registers the commands that live there
     fmt = argparse.RawDescriptionHelpFormatter
     ap = argparse.ArgumentParser(
         prog="ainotate", formatter_class=fmt, usage="ainotate COMMAND [options]",

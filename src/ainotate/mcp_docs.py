@@ -20,9 +20,12 @@ INSTRUCTIONS = (
     "redaction) so you can SHOW a UI point instead of describing it. Reach for AInotate PROACTIVELY "
     "unprompted whenever an answer benefits from showing a UI location ('where is X', 'how do I do Y'), "
     "verifying visual changes, writing bug tickets, or whenever you would otherwise write spatial descriptions "
-    "('top-right', 'under the menu'). Show, don't describe. Workflow: capture "
+    "('top-right', 'under the menu'). Also when a step needs the user (a permission switch, 2FA, a "
+    "payment or consent screen): never click it for them, show what to press and say what it does. "
+    "Show, don't describe. Workflow: capture "
     "(capture_web / capture_window / capture_screen / clipboard_image / the user's file) -> "
-    "locate exact rects (capture_web targets, locate by OCR, grid then zoom) -> annotate (a "
+    "locate exact rects (capture_web targets; capture_window targets for macOS app controls; locate "
+    "by OCR; grid then zoom) -> annotate (a "
     "draft by default) -> look at the returned preview and fix the spec -> call again with "
     "draft=false to save -> deliver the path. annotate, shoot, compare, animate and make_guide "
     "all draft by default: check the preview, then call again with draft=false. Never estimate "
@@ -252,7 +255,8 @@ warning, after widening the crop. Redact (solid) anything sensitive and set an e
 
 def _skill_md() -> Optional[str]:
     here = Path(__file__).resolve()
-    for p in (here.parents[2] / "skill" / "SKILL.md", Path("~/.agents/skills/ainotate/SKILL.md").expanduser(),
+    for p in (here.parent / "skill" / "SKILL.md", here.parents[2] / "skill" / "SKILL.md",
+              Path("~/.agents/skills/ainotate/SKILL.md").expanduser(),
               Path("~/.claude/skills/ainotate/SKILL.md").expanduser()):
         try:
             text = p.read_text(encoding="utf-8")

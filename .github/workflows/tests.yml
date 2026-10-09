@@ -1,0 +1,23 @@
+# Unit tests on macOS (the verified platform) and Linux for every push and pull request.
+# Web tests need a browser download and stay out of CI; run them with `pytest -m web`.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[all,dev]"
+      - run: python -m pytest -q
