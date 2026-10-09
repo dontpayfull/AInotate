@@ -46,6 +46,7 @@ command line and from Python.
 
 ```bash
 pipx install "ainotate[all]"   # or: uv tool install "ainotate[all]"
+                               # or: brew install dontpayfull/tap/ainotate
 ainotate doctor                # checks this machine, prints the exact fix for anything missing
 ```
 
