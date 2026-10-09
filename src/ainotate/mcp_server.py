@@ -8,6 +8,7 @@ problem and a suggested fix, never a stack trace.
 
 Run: `ainotate mcp`. Claude Desktop setup and permissions: `mcp_docs.SETUP`.
 """
+import inspect
 import json
 import sys
 from pathlib import Path
@@ -17,6 +18,7 @@ import anyio.to_thread
 from mcp import types
 from PIL import Image
 
+from . import __version__
 from .mcp_docs import (  # noqa: F401  (re-export)
     CYAN, DRAFT_NEXT, INSTRUCTIONS, MAGENTA, PREVIEW_MAX, PREVIEW_QUALITY, SETUP, _flat, _jpeg, _small,
     grid_preview, preview_jpeg, _FALLBACK_SPEC, _INSTALL, _WORKFLOW, _StrayToStderr, _draft_next, _fix_for,
@@ -29,7 +31,9 @@ except ImportError:                     # mcp 1.x
     from mcp.server.fastmcp import FastMCP as _Server
 
 
-mcp = _Server("ainotate", instructions=INSTRUCTIONS)
+_about = {"version": __version__, "website_url": "https://github.com/dontpayfull/AInotate"}   # mcp 1.x lacks these
+mcp = _Server("ainotate", instructions=INSTRUCTIONS,
+              **{k: v for k, v in _about.items() if k in inspect.signature(_Server.__init__).parameters})
 
 
 # ---------------------------------------------------------------- result helpers

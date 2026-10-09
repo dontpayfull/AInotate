@@ -2,6 +2,11 @@
 
 All notable changes to AInotate.
 
+## Unreleased
+
+### Fixed
+- The MCP server reports its version and website in `serverInfo` (was an empty version).
+
 ## 0.1.6 - 2026-10-10
 
 ### Added
