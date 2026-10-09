@@ -142,6 +142,8 @@ the target rects and label boxes without saving). Every command has `--help` wit
 
 Steps file for `guide`: `[{"image": "1.png", "text": "Open Settings", "alt": "..."}]` or
 `{"title": "...", "intro": "...", "steps": [...]}`; relative image paths resolve next to it.
+A step's optional `"title"` is a short bold summary next to its number; `"text"` then
+explains it below, and can use `**bold**`, `` `code` `` and lines starting with `- ` as a list.
 
 ## Output
 
