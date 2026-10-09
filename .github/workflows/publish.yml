@@ -34,3 +34,72 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
+
+  # The MCP Registry lists the server with the PyPI package it runs (ownership: the
+  # `mcp-name:` line in the README). Login uses this workflow's GitHub OIDC token.
+  mcp-registry:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set the release version in server.json
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          python3 - "$V" <<'PY'
+          import json, sys
+          v = sys.argv[1]
+          s = json.load(open("server.json"))
+          s["version"] = v
+          for p in s["packages"]:
+              p["version"] = v
+              for a in p.get("runtimeArguments", []):
+                  if a.get("name") == "--from":
+                      a["value"] = f"ainotate[all]=={v}"
+          json.dump(s, open("server.json", "w"), indent=2)
+          PY
+      - name: Wait until PyPI serves the release
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          for i in $(seq 1 30); do
+            curl -sf "https://pypi.org/pypi/ainotate/$V/json" >/dev/null && exit 0
+            sleep 20
+          done
+          exit 1
+      - name: Publish to the MCP Registry
+        run: |
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
+
+  # Claude Desktop extension (.mcpb), attached to the GitHub release.
+  mcpb:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Pack the extension for this release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          cd packaging
+          python3 - "$V" <<'PY'
+          import json, re, sys
+          v = sys.argv[1]
+          m = json.load(open("mcpb/manifest.json")); m["version"] = v
+          json.dump(m, open("mcpb/manifest.json", "w"), indent=2)
+          p = open("mcpb/pyproject.toml").read()
+          p = re.sub(r'^version = ".*"', f'version = "{v}"', p, flags=re.M)
+          p = re.sub(r'ainotate\[all\]==[^"]+', f"ainotate[all]=={v}", p)
+          open("mcpb/pyproject.toml", "w").write(p)
+          PY
+          npx --yes @anthropic-ai/mcpb pack mcpb "../ainotate-$V.mcpb"
+          gh release upload "$GITHUB_REF_NAME" "../ainotate-$V.mcpb" --clobber

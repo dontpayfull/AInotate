@@ -53,21 +53,22 @@ ainotate doctor                # checks this machine, prints the exact fix for a
 
 | Agent | How |
 |---|---|
-| Claude Code | `claude mcp add ainotate -- ainotate mcp`, plus the skill (below) for the full workflow |
-| Claude Desktop, Cowork | add the server to `claude_desktop_config.json` (below), restart Claude, upload the skill ZIP (below) |
-| Cursor | add the same server to `~/.cursor/mcp.json` |
-| Any MCP client | command `ainotate`, arguments `mcp` (stdio) |
-
-AInotate runs on your own computer: Cowork reaches it through the Claude
-desktop app, so keep the app open while a task uses it.
+| Claude Code | `/plugin marketplace add dontpayfull/AInotate`, then `/plugin install ainotate@ainotate`: skill and MCP server in one step |
+| Cowork | Customize > Plugins > Add marketplace > `dontpayfull/AInotate`, then install AInotate |
+| Claude Desktop | download `ainotate-<version>.mcpb` from [Releases](https://github.com/dontpayfull/AInotate/releases/latest) and open it: a one-click extension |
+| Cursor, VS Code, other MCP clients | command `ainotate`, arguments `mcp` (stdio); also listed in the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.dontpayfull/ainotate` |
 
 ```json
 {"mcpServers": {"ainotate": {"command": "ainotate", "args": ["mcp"]}}}
 ```
 
+AInotate runs on your own computer: Cowork reaches it through the Claude
+desktop app, so keep the app open while a task uses it. The plugin starts
+the installed `ainotate`, or runs it with `uvx` when it is not installed.
+
 The **skill** teaches an agent when and how to annotate: pick a source,
-find exact positions, annotate, read the image to verify, deliver. It
-ships with the package:
+find exact positions, annotate, read the image to verify, deliver. The
+plugin brings it along; without the plugin it ships with the package:
 
 ```bash
 ainotate install-skill             # Claude Code and Codex (~/.claude/skills, ~/.agents/skills)
@@ -252,3 +253,5 @@ dependency licenses are listed in [NOTICE](https://github.com/dontpayfull/AInota
 Made with ❤️ by the <a href="https://www.dontpayfull.com">DontPayFull</a> team<br>
 <sub>Coupons &amp; discount codes for 20,000+ stores</sub>
 </p>
+
+<!-- mcp-name: io.github.dontpayfull/ainotate -->

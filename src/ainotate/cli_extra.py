@@ -15,18 +15,22 @@ from .cli import EXIT_CAPTURE, A, CliExit, _json, _mod, _print_image, command
                  "prints JSON with the rects and the spec scale (repeatable)")])
 def run_window(a):
     desk = _mod("window")
+    targets = {}
+    for t in a.target:      # all checked before anything is captured or written
+        name, sep, raw = t.partition("=")
+        if not sep or not name:
+            raise CliExit(2, f"--target {t!r}: use NAME=JSON")
+        from .capture import ax
+        try:
+            targets[name] = ax.check_target(name, _json(raw, f"--target {name}"))
+        except ax.TargetSpecError as e:
+            raise CliExit(2, str(e))
     path = desk.window(a.id, a.out)
-    if not a.target:
+    if not targets:
         _print_image(path)
         return
     from PIL import Image
     from .capture import ax
-    targets = {}
-    for t in a.target:
-        name, sep, raw = t.partition("=")
-        if not sep or not name:
-            raise CliExit(2, f"--target {t!r}: use NAME=JSON")
-        targets[name] = _json(raw, f"--target {name}")
     w = desk._find(a.id)
     if not w:
         raise CliExit(EXIT_CAPTURE, f"window {a.id} is gone; run `ainotate windows`")

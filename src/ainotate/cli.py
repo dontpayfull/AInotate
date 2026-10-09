@@ -476,5 +476,6 @@ def main(argv=None) -> int:
         return code
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == "__main__":   # `python -m ainotate.cli`: run the canonical module, where cli_extra registers
+    from ainotate.cli import main as _main
+    sys.exit(_main())

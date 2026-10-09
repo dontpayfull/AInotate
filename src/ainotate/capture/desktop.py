@@ -215,6 +215,7 @@ def _mac_windows() -> list[dict]:
         out.append({
             "id": int(w["kCGWindowNumber"]),
             "app": str(w.get("kCGWindowOwnerName", "")),
+            "pid": int(w.get("kCGWindowOwnerPID", 0)) or None,
             "title": str(w.get("kCGWindowName", "") or ""),
             "bounds": {"x": int(b["X"]), "y": int(b["Y"]), "w": int(b["Width"]), "h": int(b["Height"])},
         })

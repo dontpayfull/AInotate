@@ -2,6 +2,27 @@
 
 All notable changes to AInotate.
 
+## 0.1.3 - 2026-10-09
+
+### Added
+- Claude plugin and marketplace in the repository: `/plugin marketplace add dontpayfull/AInotate`
+  in Claude Code, Customize > Plugins > Add marketplace in Cowork; skill and MCP server together.
+- Claude Desktop extension (`.mcpb`) attached to every release, installed and run with uv.
+- Listed in the MCP Registry as `io.github.dontpayfull/ainotate`, published by the release workflow.
+
+### Fixed
+- UI element targets: a label only matches as a whole word and never when negated, so
+  "Allow" can no longer pick "Don't Allow"; only the captured window is searched; a hung app
+  times out; a tree cut short at 4000 elements says so instead of "not found"; a capture whose
+  size is not a uniform multiple of the window gets image-pixel rects; duplicate app processes
+  are reported with their pids; text typed into fields is never used as a label.
+- Targets are checked before anything is captured, and malformed ones exit with code 2.
+- `install-skill`: only a folder whose frontmatter names exactly `ainotate` is replaced; a
+  link to another checkout is left alone; the installer never deletes its own source; an update
+  copies beside the old skill and swaps, so a failed copy keeps the previous one; links inside
+  the skill are not followed; `--zip` creates the folder and refuses to write inside the skill.
+- `python -m ainotate.cli` works again; the MCP window capture preview outlines the targets.
+
 ## 0.1.2 - 2026-10-09
 
 ### Added

@@ -1,0 +1,12 @@
+{
+  "name": "ainotate",
+  "description": "AInotate by DontPayFull: annotated screenshots for AI agents",
+  "owner": {"name": "DontPayFull", "url": "https://www.dontpayfull.com"},
+  "plugins": [
+    {
+      "name": "ainotate",
+      "source": "./",
+      "description": "Annotated screenshots for AI agents: steps, arrows, boxes, labels, solid redaction. Skill plus MCP server."
+    }
+  ]
+}

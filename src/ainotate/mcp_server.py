@@ -251,8 +251,8 @@ async def locate(image_path: str, text: str, all: bool = False, nth: Optional[in
 
 # ---------------------------------------------------------------- desktop
 
-def _captured(tool: str, path, extra: Optional[dict] = None) -> types.CallToolResult:
-    jpeg, (w, h) = preview_jpeg(path)
+def _captured(tool: str, path, extra: Optional[dict] = None, boxes=None) -> types.CallToolResult:
+    jpeg, (w, h) = preview_jpeg(path, boxes)
     payload = {"ok": True, "tool": tool, "image": {"path": str(path), "width": w, "height": h},
                "next": "Locate elements with locate(text) or grid + zoom; annotate with scale 1."}
     payload.update(extra or {})
@@ -288,6 +288,12 @@ async def capture_window(id: Union[int, str], targets: Optional[dict] = None) ->
     returns rects plus the scale to put in the annotate spec."""
     def work():
         from .capture import desktop
+        if targets:
+            from .capture import ax
+            if not isinstance(targets, dict):
+                raise ax.TargetSpecError('targets must be an object {name: {"element": label}}')
+            for name, t in targets.items():
+                ax.check_target(name, t)
         path = desktop.window(id)
         if not targets:
             return _captured("capture_window", path, {"window_id": id})
@@ -298,8 +304,11 @@ async def capture_window(id: Union[int, str], targets: Optional[dict] = None) ->
             raise desktop.CaptureError(f"window {id} is gone; call list_windows again")
         with Image.open(path) as im:
             m = ax.window_targets(w, im.size, targets)
-        return _captured("capture_window", path, {"window_id": id, **m, "next": "annotate with these rects "
-                         "and \"scale\": %s (rects are in window points)." % m["scale"]})
+        k = m["scale"]
+        boxes = [(n, [r["x"] * k, r["y"] * k, (r["x"] + r["w"]) * k, (r["y"] + r["h"]) * k])
+                 for n, r in m["rects"].items()]
+        return _captured("capture_window", path, {"window_id": id, **m, "next": "check the outlines in the "
+                         "preview, then annotate with these rects and \"scale\": %s." % k}, boxes)
     return await _run("capture_window", work)
 
 

@@ -193,6 +193,14 @@ def _fix_for(e: BaseException) -> str:
         if missing == "playwright":
             hint += " && playwright install chromium"
         return hint + " (then restart the MCP server). doctor() lists what is missing."
+    if mod.endswith("capture.ax"):      # desktop UI elements, not web or OCR targets
+        if name == "AmbiguousText":
+            return "Several elements match: add \"role\" (button, checkbox...), \"nth\" or \"exact\": true."
+        if name == "TargetNotFound":
+            return ("No such element in that window: use a label from the error (or `ainotate elements "
+                    "--app NAME`); for text inside a web view or image, use locate (OCR) instead.")
+        if name == "TargetSpecError":
+            return 'Each target is {"element": "label", "role"?: "button", "nth"?: 0, "exact"?: true}.'
     if name == "TextNotFound":
         return ("Use one of the closest OCR texts above, a shorter query, or grid + zoom to read "
                 "the rect off the image.")
