@@ -53,8 +53,9 @@ command line and from Python.
 Then `ainotate doctor` checks the machine and prints the exact fix for
 anything missing, including the one command that downloads Chromium for
 web capture. To update later: `brew upgrade ainotate`, `pipx upgrade
-ainotate` or `uv tool upgrade ainotate`; the plugin and the extension
-follow the releases.
+ainotate` or `uv tool upgrade ainotate`; the plugin with `/plugin
+marketplace update ainotate`; the Desktop extension by opening the newer
+`.mcpb` from Releases.
 
 **2. Connect it** to the agent you use:
 
