@@ -111,8 +111,9 @@ def _norm_steps(steps) -> list[dict]:
         if not img.is_file():
             raise ExportError(f"step {i}: image not found: {img}", f"steps[{i - 1}].image")
         text = str(s.get("text", "")).strip()
-        alt = str(s.get("alt") or "").strip() or (text.replace("\n", " ") or f"Step {i}")
-        out.append({"image": img, "text": text, "alt": alt})
+        title = str(s.get("title", "")).strip()
+        alt = str(s.get("alt") or "").strip() or (title or text.replace("\n", " ") or f"Step {i}")
+        out.append({"image": img, "title": title, "text": text, "alt": alt})
     return out
 
 
@@ -122,6 +123,10 @@ def _md(title, intro, steps, image_names) -> str:
         lines += [intro.strip(), ""]
     for i, (s, name) in enumerate(zip(steps, image_names), 1):
         text = s["text"].replace("\n", "\n   ") or f"Step {i}"
+        if s.get("title"):
+            lines += [f"{i}. **{s['title']}**", ""] + ([f"   {text}", ""] if s["text"] else [])
+            lines += [f"   ![{s['alt'].replace(']', ')').replace('[', '(')}]({name})", ""]
+            continue
         lines += [f"{i}. {text}", "", f"   ![{s['alt'].replace(']', ')').replace('[', '(')}]({name})", ""]
     return "\n".join(lines).rstrip() + "\n"
 
@@ -164,7 +169,8 @@ def _same_width(st: list[dict], width: Optional[int], tmp: Path) -> list[dict]:
 def guide(steps: list, title: str = "", out_dir=None, formats: Sequence[str] = ("md", "html"),
           intro: str = "", *, name: str = "", draft: bool = False,
           width: Optional[int] = None) -> GuideResult:
-    """Build a step-by-step guide. steps: [{"image": path, "text": "...", "alt": optional}].
+    """Build a step-by-step guide. steps: [{"image": path, "text": "...", "title": optional, "alt": optional}].
+    title is a short bold summary shown above the text.
     Writes into out_dir (default: a new dir `<prefix> <stamp> <name or "guide">` in the AInotate
     output dir, or in a temp dir when `draft`) and returns {format: Path}. md: relative images
     copied to `images/`; html: one self-contained file; pdf: Playwright print of the HTML (A4)

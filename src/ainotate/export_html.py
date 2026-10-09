@@ -24,6 +24,8 @@ h2 .n{flex:none;min-width:28px;height:28px;border-radius:14px;background:var(--a
 img{display:block;max-width:100%;height:auto;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--line)}
 h1,.intro,h2{max-width:860px}
 section.step img{margin-left:42px;max-width:calc(100% - 42px)}
+h2 .t{font-weight:600}
+p.say{max-width:818px;margin:-8px 0 16px 42px;line-height:1.6}
 img.zoomable{cursor:zoom-in}
 #zoom{position:fixed;inset:0;z-index:10;display:flex;overflow:auto;padding:24px;background:rgba(0,0,0,.94);cursor:zoom-out;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility 0s .2s}
 #zoom.open{opacity:1;visibility:visible;transition:opacity .2s ease}
@@ -51,9 +53,15 @@ def _html(title, intro, steps) -> str:
     for i, s in enumerate(steps, 1):
         mime = mimetypes.guess_type(str(s["image"]))[0] or "image/png"
         b64 = base64.b64encode(s["image"].read_bytes()).decode("ascii")
-        text = html.escape(s["text"]).replace("\n", "<br>") or f"Step {i}"
+        text = html.escape(s["text"]).replace("\n", "<br>")
+        title = html.escape(s.get("title", ""))
+        if title:
+            head_html = f'<span class="t">{title}</span>'
+            body = f'<p class="say">{text}</p>' if text else ""
+        else:
+            head_html, body = f"<span>{text or f'Step {i}'}</span>", ""
         parts.append(
-            f'<section class="step"><h2><span class="n">{i}</span><span>{text}</span></h2>'
+            f'<section class="step"><h2><span class="n">{i}</span>{head_html}</h2>{body}'
             f'<img src="data:{mime};base64,{b64}" alt="{html.escape(s["alt"], quote=True)}"></section>')
     head = f"<h1>{html.escape(title)}</h1>" if title else ""
     lead = f'<p class="intro">{html.escape(intro).replace(chr(10), "<br>")}</p>' if intro else ""
@@ -151,7 +159,7 @@ def _pdf_pillow(title, intro, steps, pdf_path: Path) -> None:
         d.text((M + r, y0 + r), str(i), font=style.load_font(26), fill="white", anchor="mm")
         tf = style.load_font(36)
         st["y"] = y0 + 4
-        text(_wrap(d, s["text"] or f"Step {i}", tf, W - 2 * M - 2 * r - 20), tf, 46, M + 2 * r + 20,
+        text(_wrap(d, "\n".join(x for x in (s.get("title", ""), s["text"]) if x) or f"Step {i}", tf, W - 2 * M - 2 * r - 20), tf, 46, M + 2 * r + 20,
              (29, 29, 31))
         y = max(st["y"], y0 + 2 * r if st["d"] is d else 0) + 28
         im = _rgb(_open(s["image"]))

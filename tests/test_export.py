@@ -287,3 +287,16 @@ def test_pillow_pdf_long_text_never_squashes_the_image(tmp_path, monkeypatch):
     assert (tmp_path / "x.pdf").read_bytes()[:5] == b"%PDF-"
     assert len(pasted) == 2 and all(h >= export_html.MIN_IMAGE_H for _, h in pasted)
     assert pages[0] >= 3        # text spilled over a page, image on its own page, step 2
+
+
+def test_guide_step_title_shows_bold_summary_above_text(tmp_path):
+    from PIL import Image
+    from ainotate.export import guide
+    img = tmp_path / "a.png"
+    Image.new("RGB", (40, 30), "white").save(img)
+    res = guide([{"image": str(img), "title": "Deploy a model", "text": "Pick one and press Deploy."}],
+                "T", tmp_path / "out", formats=("md", "html"))
+    h = res["html"].read_text()
+    assert '<span class="t">Deploy a model</span>' in h and '<p class="say">Pick one and press Deploy.</p>' in h
+    md = res["md"].read_text()
+    assert "1. **Deploy a model**" in md and "   Pick one and press Deploy." in md
