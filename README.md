@@ -42,13 +42,17 @@ command line and from Python.
 
 ## Set it up in your agent
 
-**1. Install** (Python 3.10+):
+**1. Install**, one of:
 
-```bash
-pipx install "ainotate[all]"   # or: uv tool install "ainotate[all]"
-                               # or: brew install dontpayfull/tap/ainotate
-ainotate doctor                # checks this machine, prints the exact fix for anything missing
-```
+| With | Command |
+|---|---|
+| Homebrew (macOS) | `brew install dontpayfull/tap/ainotate` |
+| pipx or uv (Python 3.10+) | `pipx install "ainotate[all]"` or `uv tool install "ainotate[all]"` |
+| Claude plugin or Desktop extension | nothing to install first: step 2 brings AInotate along |
+
+Then `ainotate doctor` checks the machine and prints the exact fix for
+anything missing, including the one command that downloads Chromium for
+web capture.
 
 **2. Connect it** to the agent you use:
 

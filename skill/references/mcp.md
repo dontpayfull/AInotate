@@ -8,9 +8,13 @@ on disk. Failures come back as `ok: false` with the problem and a suggested fix.
 ## Install
 
 ```bash
-pipx install "ainotate[all]"     # or: uv tool install "ainotate[all]"
-ainotate doctor                  # prints the Chromium download command
+brew install dontpayfull/tap/ainotate   # or: pipx install "ainotate[all]" / uv tool install "ainotate[all]"
+ainotate doctor                         # prints the Chromium download command
 ```
+
+No install at all: the Claude plugin (`/plugin marketplace add dontpayfull/AInotate` in Claude
+Code; Customize > Plugins > Add marketplace in Cowork) and the Desktop extension
+(`ainotate-<version>.mcpb` from the GitHub releases) fetch AInotate themselves.
 
 ## Claude Desktop
 
@@ -21,7 +25,7 @@ and reopen Claude.
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json` (Windows support is experimental:
   implemented and unit-tested with mocks, not yet verified on real machines)
 
-Installed with pipx or uv tool:
+Installed with Homebrew, pipx or uv tool:
 ```json
 {"mcpServers": {"ainotate": {"command": "ainotate", "args": ["mcp"]}}}
 ```
