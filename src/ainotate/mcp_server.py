@@ -358,8 +358,8 @@ async def zoom(image_path: str, x1: float, y1: float, x2: float, y2: float,
 async def make_guide(steps: list[dict], title: str = "", formats: Optional[list[str]] = None,
                      name: str = "", draft: bool = True) -> types.CallToolResult:
     """Step-by-step guide from annotated images: steps [{"image": path, "text": "...", "alt"?}],
-    formats any of md, html, pdf (default md + html); every step image is put on one canvas
-    width. name = folder name in the output folder (default "guide"). Draft by default (temp
+    formats any of md, html, pdf (default md + html); every step image keeps its own size.
+    name = folder name in the output folder (default "guide"). Draft by default (temp
     dir): check the preview (the first step's image), then call again with draft=false to save.
     Returns the file per format."""
     def work():

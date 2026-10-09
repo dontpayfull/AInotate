@@ -133,14 +133,14 @@ class GuideResult(dict):
 
 
 def _same_width(st: list[dict], width: Optional[int], tmp: Path) -> list[dict]:
-    """Every step image on one canvas width (default: the widest image): narrower images are
-    centered on white (transparent when the image has alpha), wider ones are only scaled down
-    when an explicit `width` asks for it. Unchanged images keep their original file."""
+    """Every step image on one canvas width `width`: narrower images are centered on white
+    (transparent when the image has alpha), wider ones are scaled down. Unchanged images keep
+    their original file."""
     sizes = []
     for s in st:
         with Image.open(s["image"]) as im:
             sizes.append(im.size)
-    W = int(width) if width else max(w for w, _ in sizes)
+    W = int(width)
     out = []
     for i, (s, (w, h)) in enumerate(zip(st, sizes), 1):
         if w == W:
@@ -169,9 +169,9 @@ def guide(steps: list, title: str = "", out_dir=None, formats: Sequence[str] = (
     output dir, or in a temp dir when `draft`) and returns {format: Path}. md: relative images
     copied to `images/`; html: one self-contained file; pdf: Playwright print of the HTML (A4)
     when it works, else a Pillow page-per-step PDF (see result.pdf_backend).
-    width: every step image is put on one canvas width so the guide looks consistent (default:
-    the widest image; narrower ones are centered, padded with white or transparency; an explicit
-    smaller width scales wider ones down). width=0 keeps the images as they are."""
+    width: by default (None or 0) every step image keeps its own size. A width in pixels puts
+    every step image on that one canvas width: narrower ones are centered, padded with white or
+    transparency, wider ones are scaled down."""
     formats = tuple(f.lower().lstrip(".") for f in formats)
     bad = [f for f in formats if f not in ("md", "html", "pdf")]
     if bad:
@@ -185,7 +185,7 @@ def guide(steps: list, title: str = "", out_dir=None, formats: Sequence[str] = (
     res = GuideResult()
     res.warnings = []
     with tempfile.TemporaryDirectory(prefix="ainotate-guide-") as td:
-        if width != 0:
+        if width:
             st = _same_width(st, width, Path(td))
         _write_guide(res, st, title, intro, out, stem, formats)
     return res
