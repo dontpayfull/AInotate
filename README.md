@@ -55,7 +55,8 @@ a ticket or a guide.
 |---|---|
 | Homebrew (macOS) | `brew install dontpayfull/tap/ainotate` |
 | pipx or uv (Python 3.10+) | `pipx install "ainotate[all]"` or `uv tool install "ainotate[all]"` |
-| Claude plugin or Desktop extension | nothing to install first: step 2 brings AInotate along |
+| Claude plugin | only [uv](https://docs.astral.sh/uv/): step 2 brings AInotate along |
+| Claude Desktop extension | nothing to install first |
 
 Then `ainotate doctor` checks the machine and prints the exact fix for
 anything missing, including the one command that downloads Chromium for
@@ -81,8 +82,9 @@ marketplace update ainotate`; the Desktop extension by opening the newer
 ```
 
 AInotate runs on your own computer: Cowork reaches it through the Claude
-desktop app, so keep the app open while a task uses it. The plugin starts
-the installed `ainotate`, or runs it with `uvx` when it is not installed.
+desktop app, so keep the app open while a task uses it. The plugin runs
+AInotate with `uvx`, pinned to its release, so it needs
+[uv](https://docs.astral.sh/uv/).
 
 The **skill** teaches an agent when and how to annotate: pick a source,
 find exact positions, annotate, read the image to verify, deliver. The

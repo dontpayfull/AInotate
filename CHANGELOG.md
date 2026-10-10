@@ -2,6 +2,13 @@
 
 All notable changes to AInotate.
 
+## Unreleased
+
+### Changed
+- The Claude plugin runs AInotate with `uvx` directly (pinned to the release) instead of a
+  shell wrapper, as the Claude plugin directory requires; it needs uv. The plugin has an icon,
+  a display name and links for the directory listing.
+
 ## 0.1.8 - 2026-10-10
 
 ### Changed
