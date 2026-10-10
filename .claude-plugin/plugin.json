@@ -4,12 +4,13 @@
   "version": "0.1.8",
   "description": "Annotated screenshots for AI agents: numbered steps, Skitch-style arrows, boxes, labels and solid redaction, placed where they cover the least content. Skill plus MCP server.",
   "author": {"name": "DontPayFull", "url": "https://www.dontpayfull.com"},
-  "homepage": "https://github.com/dontpayfull/AInotate",
+  "homepage": "https://www.dontpayfull.com/labs/ainotate/",
   "repository": "https://github.com/dontpayfull/AInotate",
   "license": "AGPL-3.0-or-later",
-  "documentationUrl": "https://github.com/dontpayfull/AInotate#readme",
+  "documentationUrl": "https://www.dontpayfull.com/labs/ainotate/#get-started",
   "supportUrl": "https://github.com/dontpayfull/AInotate/issues",
-  "privacyPolicyUrl": "https://github.com/dontpayfull/AInotate#privacy",
+  "privacyPolicyUrl": "https://www.dontpayfull.com/labs/ainotate/legal/#privacy",
+  "termsOfServiceUrl": "https://www.dontpayfull.com/labs/ainotate/legal/#terms",
   "keywords": ["screenshot", "annotation", "mcp", "skill", "redaction", "documentation"],
   "mcpServers": {
     "ainotate": {

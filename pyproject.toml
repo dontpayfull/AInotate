@@ -64,7 +64,9 @@ all = ["ainotate[web,mcp,ocr,desktop]"]
 dev = ["pytest", "anyio"]
 
 [project.urls]
-Homepage = "https://github.com/dontpayfull/AInotate"
+Homepage = "https://www.dontpayfull.com/labs/ainotate/"
+Source = "https://github.com/dontpayfull/AInotate"
+Documentation = "https://www.dontpayfull.com/labs/ainotate/#get-started"
 DontPayFull = "https://www.dontpayfull.com"
 Changelog = "https://github.com/dontpayfull/AInotate/blob/main/CHANGELOG.md"
 

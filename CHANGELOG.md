@@ -8,6 +8,9 @@ All notable changes to AInotate.
 - The Claude plugin runs AInotate with `uvx` directly (pinned to the release) instead of a
   shell wrapper, as the Claude plugin directory requires; it needs uv. The plugin has an icon,
   a display name and links for the directory listing.
+- AInotate has a website: https://www.dontpayfull.com/labs/ainotate/ (homepage, get started,
+  privacy and terms), linked from the README, the plugin, PyPI, the MCP Registry entry, the
+  Desktop extension and the MCP server info.
 
 ## 0.1.8 - 2026-10-10
 

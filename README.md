@@ -7,6 +7,8 @@
 
 **Annotated screenshots for AI agents: the agent shows you the button instead of describing where it is.**
 
+[Website](https://www.dontpayfull.com/labs/ainotate/) · [Get started](https://www.dontpayfull.com/labs/ainotate/#get-started) · [Privacy](https://www.dontpayfull.com/labs/ainotate/legal/#privacy)
+
 [![Tests](https://github.com/dontpayfull/AInotate/actions/workflows/tests.yml/badge.svg)](https://github.com/dontpayfull/AInotate/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/ainotate)](https://pypi.org/project/ainotate/)
 [![Python](https://img.shields.io/pypi/pyversions/ainotate)](https://pypi.org/project/ainotate/)

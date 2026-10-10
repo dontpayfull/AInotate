@@ -4,7 +4,7 @@
   "title": "AInotate",
   "description": "Annotated screenshots for AI agents: steps, Skitch-style arrows, boxes, labels, solid redaction.",
   "repository": {"url": "https://github.com/dontpayfull/AInotate", "source": "github"},
-  "websiteUrl": "https://github.com/dontpayfull/AInotate",
+  "websiteUrl": "https://www.dontpayfull.com/labs/ainotate/",
   "version": "0.1.8",
   "packages": [
     {

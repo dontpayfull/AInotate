@@ -31,7 +31,7 @@ except ImportError:                     # mcp 1.x
     from mcp.server.fastmcp import FastMCP as _Server
 
 
-_about = {"version": __version__, "website_url": "https://github.com/dontpayfull/AInotate"}   # mcp 1.x lacks these
+_about = {"version": __version__, "website_url": "https://www.dontpayfull.com/labs/ainotate/"}   # mcp 1.x lacks these
 mcp = _Server("ainotate", instructions=INSTRUCTIONS,
               **{k: v for k, v in _about.items() if k in inspect.signature(_Server.__init__).parameters})
 
