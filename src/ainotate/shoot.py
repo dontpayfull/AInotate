@@ -85,7 +85,22 @@ def prepare_image_spec(spec: dict) -> tuple[dict, list[str]]:
     path = os.path.expanduser(spec["input"])
     open_image(path)                       # SpecError (exit 2) before any OCR
     scale = float(spec.get("scale", 1))
-    items = ocr.read(path)
+    try:
+        items = ocr.read(path)
+    except ocr.OcrError:
+        if pol["enabled"] and not ocr.available_backends():   # never save an unredacted image quietly
+            off = "rerun with --privacy off (\"privacy\": \"off\" in the spec) if the image holds nothing sensitive"
+            if todo:   # text targets need OCR too: --privacy off alone would still fail
+                why = (f", and {len(todo)} mark(s) with a text target cannot be found without one. Nothing was "
+                       "saved. Fix it one of two ways:\n")
+                off = ("give those marks explicit rect coordinates instead of text targets (read them off "
+                       "`ainotate grid` or `ainotate zoom`) and " + off)
+            else:
+                why = ". Nothing was saved. Fix it one of two ways:\n"
+            raise ocr.OcrError("no text reader (OCR engine) is installed, so automatic privacy cannot read "
+                               "this image to hide secrets" + why + "1. Install a text reader:\n"
+                               + ocr.install_hint() + "\n2. Or " + off + ".") from None
+        raise
     out, problems = list(marks), []
     for i in todo:
         m, t = marks[i], _image_target(i, marks[i])

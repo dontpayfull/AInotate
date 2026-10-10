@@ -234,12 +234,16 @@ def test_export_errors_name_the_bad_input(shots, tmp_path):
 
 # ---------------------------------------------------------------- guide width + Pillow PDF
 
-def test_guide_pads_steps_to_one_width(tmp_path):
+def test_guide_keeps_image_widths_by_default_and_pads_on_request(tmp_path):
     wide = make_ui(tmp_path / "wide.png", size=(1000, 300))
     narrow = make_ui(tmp_path / "narrow.png", size=(600, 300))
     alpha = tmp_path / "alpha.png"
     Image.new("RGBA", (400, 200), (255, 0, 0, 255)).save(alpha)
-    res = export.guide([{"image": wide}, {"image": narrow}, {"image": alpha}], "W", tmp_path / "g")
+    export.guide([{"image": wide}, {"image": narrow}, {"image": alpha}], "W", tmp_path / "d")
+    assert [Image.open(p).size for p in sorted((tmp_path / "d" / "images").iterdir())] == \
+        [(1000, 300), (600, 300), (400, 200)]                # default: each image as is
+    res = export.guide([{"image": wide}, {"image": narrow}, {"image": alpha}], "W", tmp_path / "g",
+                       width=1000)
     imgs = sorted((tmp_path / "g" / "images").iterdir())
     sizes = [Image.open(p).size for p in imgs]
     assert sizes == [(1000, 300), (1000, 300), (1000, 200)]
@@ -251,7 +255,7 @@ def test_guide_pads_steps_to_one_width(tmp_path):
     assert a.mode == "RGBA" and a.getpixel((5, 5))[3] == 0 and a.getpixel((500, 100)) == (255, 0, 0, 255)
     assert Image.open(narrow).size == (600, 300)            # the source file is untouched
     assert "images/step-02.png" in res["md"].read_text()
-    # explicit width: wider images scale down, width=0 keeps them as they are
+    # explicit smaller width: wider images scale down; width=0 keeps them as they are
     export.guide([{"image": wide}, {"image": narrow}], "W", tmp_path / "h", width=800)
     assert [Image.open(p).size for p in sorted((tmp_path / "h" / "images").iterdir())] == [(800, 240), (800, 300)]
     export.guide([{"image": wide}, {"image": narrow}], "W", tmp_path / "k", width=0)

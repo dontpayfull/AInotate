@@ -256,6 +256,32 @@ def test_tesseract_run_args_and_upscale(monkeypatch):
     assert lines[0]["box"] == (50, 20, 95, 14)
 
 
+def test_tesseract_runs_single_threaded_one_at_a_time(monkeypatch):
+    import threading
+    import time
+    lock, live, peak, envs = threading.Lock(), [0], [0], []
+
+    def run(args, **kw):
+        if "--list-langs" in args:
+            return subprocess.CompletedProcess(args, 0, "eng\n", "")
+        envs.append(kw.get("env"))
+        with lock:
+            live[0] += 1
+            peak[0] = max(peak[0], live[0])
+        time.sleep(0.05)
+        with lock:
+            live[0] -= 1
+        return subprocess.CompletedProcess(args, 0, TSV, "")
+    monkeypatch.setattr(ocr.subprocess, "run", run)
+    monkeypatch.setattr(ocr_engines, "_tesseract_cmd", lambda: "/x/tesseract")
+    monkeypatch.setattr(ocr_engines, "_tess_langs_cache", {})
+    monkeypatch.delenv("OMP_THREAD_LIMIT", raising=False)
+    ocr._ocr(Image.new("RGB", (4000, 1000)), "tesseract", ["en-US"])   # big enough to tile on other engines
+    assert envs and all(e["OMP_THREAD_LIMIT"] == "1" for e in envs)
+    assert peak[0] == 1
+    assert "OMP_THREAD_LIMIT" not in __import__("os").environ             # the user's own env is untouched
+
+
 def test_tiles_cover_with_overlap():
     t = ocr._tiles(3610, 887, 1000, 250)
     assert t[0][0] == 0 and t[-1][2] == 3610 and all(b[1] == 0 and b[3] == 887 for b in t)

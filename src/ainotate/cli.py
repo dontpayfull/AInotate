@@ -344,7 +344,7 @@ def run_info(a):
          [A("steps_json", nargs="?", help="[{image, text}] or {title, intro, steps}"),
           A("--step", nargs=2, action="append", metavar=("IMAGE", "TEXT"), help="repeatable, in order"),
           A("--title"), A("--intro"), A("--formats", default="md,html", help="comma list of md,html,pdf"),
-          A("--width", type=int, help="canvas width for every step image (default: the widest; 0 = as is)"),
+          A("--width", type=int, help="put every step image on one canvas width in pixels (default: each image keeps its own width)"),
           A("--name", help="folder name in the output folder (default: guide)"),
           A("--out-dir", metavar="DIR")])
 def run_guide(a):

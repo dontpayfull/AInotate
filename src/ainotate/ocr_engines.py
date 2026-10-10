@@ -368,8 +368,9 @@ def _tesseract_run(img, langs):
         big.save(p)
         args = [cmd, p, "stdout", "--psm", "11", "-c", "tessedit_create_tsv=1", "-c", "tessedit_create_txt=0"]
         lang = _tesseract_langs(cmd, langs)
+        # one thread: OpenMP otherwise takes every core, which slows Tesseract down on most machines
         r = subprocess.run(args + (["-l", lang] if lang else []), capture_output=True, text=True,
-                           encoding="utf-8", timeout=30)
+                           encoding="utf-8", timeout=30, env={**os.environ, "OMP_THREAD_LIMIT": "1"})
     if r.returncode != 0:
         raise OcrError(f"tesseract failed: {r.stderr.strip()[:300]}")
     return _parse_tesseract_tsv(r.stdout, k)

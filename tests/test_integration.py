@@ -297,6 +297,31 @@ def test_annotate_json_and_privacy_flag(ui, tmp_path, out_dirs, fake_ocr, capsys
     assert "REDACTED" not in capsys.readouterr().err
 
 
+def test_cli_privacy_auto_without_ocr_engine_says_how_to_fix(ui, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(ocr, "available_backends", lambda: [])
+
+    def no_engine(*a, **k):
+        raise ocr.OcrError("no OCR engine available")
+    monkeypatch.setattr(ocr, "read", no_engine)
+    spec = tmp_path / "s.json"
+    spec.write_text(json.dumps({"input": ui, "marks": [{"type": "box", "rect": [10, 10, 100, 100]}]}))
+    out = tmp_path / "out"
+    monkeypatch.setenv("AINOTATE_OUTPUT_DIR", str(out))
+    assert cli.main(["annotate", str(spec), "--privacy", "auto"]) == 4
+    err = capsys.readouterr().err
+    assert "no text reader (OCR engine) is installed" in err and "Nothing was saved" in err
+    assert ocr.install_hint().splitlines()[0] in err and "--privacy off" in err
+    assert not out.exists() or not any(out.rglob("*.png"))
+    # a text target needs OCR too: --privacy off alone is not offered, rect coordinates are
+    spec.write_text(json.dumps({"input": ui, "marks": [{"type": "box", "target": {"text": "Save"}}]}))
+    assert cli.main(["annotate", str(spec), "--privacy", "auto"]) == 4
+    err = capsys.readouterr().err
+    assert "1 mark(s) with a text target cannot be found" in err and "Nothing was saved" in err
+    assert ocr.install_hint().splitlines()[0] in err
+    assert "2. Or give those marks explicit rect coordinates" in err and "ainotate grid" in err
+    assert not out.exists() or not any(out.rglob("*.png"))
+
+
 def test_cli_text_target_exit_codes(ui, tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(ocr, "read", lambda *a, **k: items([("Save", 100, 100, 40, 14)], [("Save", 100, 300, 40, 14)]))
     spec = tmp_path / "s.json"
