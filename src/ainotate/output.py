@@ -62,17 +62,10 @@ def load_config() -> Config:
 
 def default_look() -> str:
     """The look for a spec without "look": env AINOTATE_LOOK > config.toml `look` > "default"."""
-    from .spec import SpecError, check_look
-    look = os.environ.get("AINOTATE_LOOK") or None
-    where = "AINOTATE_LOOK"
-    if look is None:
-        try:
-            look = _read_config_file(CONFIG_PATH).get("look") or "default"
-        except OutputError as e:
-            raise SpecError(str(e))
-        where = f"`look` in {CONFIG_PATH}"
-    check_look(look, where)
-    return look
+    look = os.environ.get("AINOTATE_LOOK")
+    if not look:
+        look = _read_config_file(CONFIG_PATH).get("look")
+    return look if isinstance(look, str) and look else "default"
 
 
 def safe_component(value: str, what: str = "name") -> str:

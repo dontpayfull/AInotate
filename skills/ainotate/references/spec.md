@@ -16,7 +16,7 @@ Everything the renderer accepts. `SKILL.md` has the workflow; this file is for l
 | `crop_pad` | margin around the marks for `"auto"` and `"tight"` (default 260 image px at 2000px width) |
 | `dim` | spotlight darkness 0-1 (default 0.55) |
 | `arrow_style` | `"skitch"` (default, tapered), `"straight"`, `"curved"`, or `"line"` |
-| `look` | `"default"`, or a look from an installed package (entry point group `ainotate.looks`, a subclass of `ainotate.render.Look`); also `--look` and the MCP `look` argument |
+| `look` | mark style: `"default"` (built in) or an installed look package such as `"neat"`; see below |
 | `frame` | backdrop and window chrome, see below |
 | `privacy` | `"off"` (default for images), `"auto"` (OCR the image, redact findings) or an object |
 
@@ -32,6 +32,14 @@ Everything the renderer accepts. `SKILL.md` has the workflow; this file is for l
 | `hide_overlays` | hide cookie banners and consent layers (default true) |
 | `browser` | `chromium` (default), `firefox`, `webkit` (launch mode only) |
 | `timeout_ms` | navigation and wait timeout (default 30000) |
+
+**Looks.** `"look"` picks the mark style. `"default"` is the only one built in; other packages add
+looks (entry point group `ainotate.looks`, a subclass of `ainotate.looks.Look`), for example the
+separate `ainotate-neat` package adds `"neat"`. Pick one per spec, with `--look` on `annotate` and
+`shoot`, or with the MCP `look` argument; without one, env `AINOTATE_LOOK`, then `look` in
+`~/.config/ainotate/config.toml`, then `"default"`. A look that is not installed, or fails to
+load, start or draw, never breaks a render: the default look is used and a warning says why and
+lists the installed looks.
 
 `shoot` defaults `crop` to `"auto"` and `privacy` to `"auto"`. With chrome `"browser"` and no
 `url` in the frame, the address bar shows the captured page's address.

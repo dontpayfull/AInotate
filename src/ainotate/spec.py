@@ -80,19 +80,6 @@ def check_point(p, where, errs):
         errs.append(f"{where}: must be [x, y]")
 
 
-def installed_looks() -> dict:
-    """Looks from other packages: entry point group "ainotate.looks", name -> entry point."""
-    from importlib.metadata import entry_points
-    return {e.name: e for e in entry_points(group="ainotate.looks")}
-
-
-def check_look(look, where="spec: 'look'"):
-    """SpecError naming the installed looks unless `look` is "default" or one of them."""
-    if look != "default" and (not isinstance(look, str) or look not in installed_looks()):
-        raise SpecError(f"{where} is {look!r}, not an installed look; installed looks: "
-                        + ", ".join(["default", *sorted(installed_looks())]))
-
-
 def validate(spec):
     """Return the marks of a valid spec; raise SpecError with every problem otherwise."""
     errs = []
@@ -113,11 +100,8 @@ def validate(spec):
         errs.append("spec: 'crop_pad' must be a number >= 0")
     if spec.get("arrow_style", "skitch") not in ("skitch", "straight", "curved", "line"):
         errs.append("spec: 'arrow_style' must be skitch, straight, curved or line")
-    if "look" in spec:
-        try:
-            check_look(spec["look"])
-        except SpecError as e:
-            errs.append(str(e))
+    if "look" in spec and not (isinstance(spec["look"], str) and spec["look"]):
+        errs.append("spec: 'look' must be a look name (\"default\" or an installed look)")
     if "name" in spec and not isinstance(spec["name"], str):
         errs.append("spec: 'name' must be a string")
     if "marks" not in spec:

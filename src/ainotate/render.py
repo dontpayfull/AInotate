@@ -27,8 +27,12 @@ Marks may use "target": {"text": "Save", "nth"?, "within"?, "exact"?} instead of
 OCR on the input). spec "privacy": "auto" adds solid redactions for secrets OCR reads (default "off"
 here); spec "frame" puts the finished image on a backdrop (beautify.apply_frame, last step).
 
+spec "look": the mark style, "default" (built in) or the name of an installed look package (entry
+point group "ainotate.looks", e.g. "neat"); without it AINOTATE_LOOK, then `look` in config.toml.
+
 Warnings: more than 6 marks, labels over 4 words, labels that overlap each other or cover another
-mark's target, arrows that cross, a magnifier that had to shrink its zoom.
+mark's target, arrows that cross, a magnifier that had to shrink its zoom, a look that is not
+installed or failed (the default look is used then; the warning lists the installed looks).
 
 Layout (crop, labels, badges, loupes) lives in placement.py.
 """
@@ -45,7 +49,8 @@ from .marks import (aa_draw, click_geometry, deemphasize, draw_click, draw_keys,
                     overlap_warnings, route_arrow)
 from .label_plan import Job, plan_labels
 from .placement import RenderError, ContentMap, auto_crop, place_badge, place_label, place_loupe  # noqa: F401
-from .spec import DECORATIVE, LABELED, installed_looks, open_image, spec_warnings, validate
+from .looks import Look, LookFailed, fallback, installed_name, pick  # noqa: F401  (Look: base class)
+from .spec import DECORATIVE, LABELED, open_image, spec_warnings, validate
 from .style import LABEL_FILL, SHADOW, color_of, font_for, load_font, mark_unit, pill_size, rgba, text_color_on
 
 __all__ = ["RenderError", "RenderResult", "render"]
@@ -111,77 +116,6 @@ def draw_arrow_skitch(layer, gray, p1, p2, color, u, path=None):
     layer.alpha_composite(hi.resize((x1 - x0, y1 - y0), Image.LANCZOS), dest=(x0, y0))
 
 
-# ---------- looks ----------
-
-class Look:
-    """The built-in look, and the base class for looks from other packages: entry point group
-    "ainotate.looks", name -> a Look subclass, picked by spec "look" (then AINOTATE_LOOK, then
-    `look` in config.toml). render() draws every mark through these methods. `ctx` holds the
-    unmarked `page`, `marks`, `rects` and `points` (image px, after the crop), the crop's `offset`
-    (image px), `scale` and `u`."""
-    shadow = SHADOW       # drop shadow under all marks: opacity, y-offset, blur (x u)
-    dim = 0.55            # spotlight darkness when the spec sets no "dim"
-    loupe_line = None     # magnifier line width (None: the built-in width)
-
-    def __init__(self, ctx):
-        self.ctx, u = ctx, ctx.u
-        self.stroke = max(3, round(u / 4))
-        self.spot_radius = int(u)
-        self.font = load_font(int(1.35 * u))
-        self.badge_font = load_font(int(1.4 * u))
-
-    def color(self, i):
-        return color_of(self.ctx.marks[i].get("color"))
-
-    def label_size(self, text):
-        return pill_size(self.font, text, self.ctx.u)
-
-    def label(self, layer, img, i, box, text):   # labels and text notes; img: the page with tints
-        draw_pill(layer, box, text, self.font, self.color(i), self.ctx.u)
-
-    def outline(self, layer, i, g):
-        draw_outline(layer, g, self.color(i), self.stroke, int(0.6 * self.ctx.u))
-
-    def badge(self, layer, img, i, b, n):
-        draw_badge(layer, b, self.color(i), n, self.badge_font, max(2, round(0.12 * self.ctx.u)))
-
-    def arrow(self, layer, gray, i, path, style, badge):   # badge: the mark's own step badge or None
-        if style == "line":
-            draw_arrow(ImageDraw.Draw(layer), path[0], path[-1], self.color(i), self.stroke, self.ctx.u)
-        else:
-            draw_arrow_skitch(layer, gray, path[0], path[-1], self.color(i), self.ctx.u, path)
-
-    def highlight(self, over, img, i, r):   # lighter tint on dark regions (70 reads as a solid block there)
-        dark = ImageStat.Stat(img.convert("L").crop([int(v) for v in r])).mean[0] < 90
-        ImageDraw.Draw(over).rectangle(r, fill=rgba(self.color(i), 45 if dark else 70))
-
-    def redact_fill(self, i):   # a look may change the color of a redaction, never its area
-        return "#1F1F1F"
-
-    def keys_font(self, i, keys):
-        return font_for(keys, int(1.15 * self.ctx.u))
-
-
-def _look(spec, ctx, warnings):
-    """The look instance for this render. A look that is installed but fails to load or start
-    falls back to the built-in one with a warning: a broken add-on never costs the image."""
-    if "look" in spec:
-        name = spec["look"]
-    else:
-        from .output import default_look
-        name = default_look()
-    if name != "default":
-        try:
-            cls = installed_looks()[name].load()
-            if not (isinstance(cls, type) and issubclass(cls, Look)):
-                raise TypeError("not a subclass of ainotate.render.Look")
-            return cls(ctx)
-        except Exception as e:   # noqa: BLE001  (third-party code: any failure means "use the default")
-            warnings.append(f"look {name!r} could not be loaded ({type(e).__name__}: {e}); "
-                            "used the default look")
-    return Look(ctx)
-
-
 # ---------- render ----------
 
 def _su(vals, scale):
@@ -205,7 +139,24 @@ def _outside_crop(i, m, r, crop, scale):
 
 def render(spec: dict, debug: bool = False) -> RenderResult:
     """Validate and draw a spec. SpecError for an invalid spec or unreadable input,
-    RenderError for a valid spec that cannot be drawn."""
+    RenderError for a valid spec that cannot be drawn. When an installed look is in use and
+    anything fails (the look, or AInotate on a value the look gave it), the render is redone from
+    the spec with the default look, with a warning; an error the default look also hits is raised."""
+    try:
+        return _render(spec, debug)
+    except LookFailed as e:
+        warning = str(e)
+    except Exception as e:  # noqa: BLE001 - only with an installed look, see below
+        name = installed_name(spec)
+        if name is None:
+            raise
+        warning = fallback(name, "failed while drawing", e)
+    res = _render(dict(spec, look="default"), debug)
+    res.warnings.insert(0, warning)
+    return res
+
+
+def _render(spec: dict, debug: bool) -> RenderResult:
     from .shoot import prepare_image_spec   # text targets (OCR) and auto privacy -> rects
     n_user = len(validate(spec))
     spec, redactions = prepare_image_spec(spec)
@@ -269,8 +220,8 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
     W, H = img.size
     u = mark_unit(W, H, scale)
     style = spec.get("arrow_style", "skitch")
-    lk = _look(spec, SimpleNamespace(page=page, marks=marks, rects=rects, points=points,
-                                     offset=(ox, oy), scale=scale, u=u), warnings)
+    lk = pick(spec, SimpleNamespace(page=page, marks=marks, rects=rects, points=points,
+                                    offset=(ox, oy), scale=scale, u=u), warnings)
     stroke = lk.stroke
     base_pad = 0.7 * u
 
