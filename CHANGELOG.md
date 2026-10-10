@@ -8,6 +8,10 @@ All notable changes to AInotate.
 - The Claude plugin runs AInotate with `uvx` directly (pinned to the release) instead of a
   shell wrapper, as the Claude plugin directory requires; it needs uv. The plugin has an icon,
   a display name and links for the directory listing.
+- Looks: the plumbing moved to `looks.py`; a look that raises or returns something wrong while
+  drawing now also falls back to the default, redrawn from the original spec so redaction coverage
+  never changes; the MCP `annotate`, `preview` and `shoot` tools document `look` (#5, thanks
+  @testy-cool).
 - AInotate has a website: https://www.dontpayfull.com/labs/ainotate/ (homepage, get started,
   privacy and terms), linked from the README, the plugin, PyPI, the MCP Registry entry, the
   Desktop extension and the MCP server info.

@@ -1,7 +1,7 @@
 import hashlib
+import sys
 import importlib.metadata
 import json
-import sys
 
 import PIL
 import pytest
@@ -25,8 +25,8 @@ EVERY = [
     {"type": "blur", "rect": [290, 680, 700, 700]},
     {"type": "pixelate", "rect": [290, 735, 700, 755]},
 ]
-# sha256 of the default render of every mark type, made with the code before looks were pluggable.
-# Fonts come from the system, so the pixels are pinned per platform (Linux: the contributor's run).
+# sha256 of the default render of every mark type, made with the code before looks were pluggable
+# (fonts differ by platform, so each platform has its own pin)
 DEFAULT_SHA = {
     ("linux", False): "2459af01e003be489fe9675a07cea01f3109a6ed153d6b02d767dd0d11456417",
     ("linux", True): "fc93f1192da4bbcc2fb0ad05d98fa91b006776c58c0968f158ffa25769628368",
@@ -103,36 +103,199 @@ def test_look_from_flag_env_and_config(ui, gray_installed, isolated_env, monkeyp
     assert not Gray.drawn
 
 
-@pytest.mark.parametrize("where", ["spec", "env"])
-def test_unknown_look_lists_the_installed_looks(ui, gray_installed, monkeypatch, where):
+@pytest.mark.parametrize("where", ["spec", "env", "config"])
+def test_a_look_that_is_not_installed_falls_back_with_a_warning(ui, gray_installed, isolated_env, monkeypatch, where):
     s = {"input": ui, "marks": [EVERY[1]]}
     if where == "spec":
         s["look"] = "neat"
-    else:
+    elif where == "env":
         monkeypatch.setenv("AINOTATE_LOOK", "neat")
+    else:
+        cfg = isolated_env / ".config" / "ainotate" / "config.toml"
+        cfg.parent.mkdir(parents=True)
+        cfg.write_text('look = "neat"\n')
+    res = render(s)
+    assert res.image.tobytes() == render({"input": ui, "marks": [EVERY[1]]}).image.tobytes()
+    assert res.warnings == ["look 'neat' is not installed, so the default look was used; "
+                            "installed looks: default, gray"]
+
+
+class Broken(Gray):
+    def __init__(self, ctx):
+        raise RuntimeError("no font")
+
+
+class BadDraw(Gray):
+    def label(self, layer, img, i, box, text):
+        raise ValueError("bad label")
+
+
+@pytest.mark.parametrize("case, warning", [
+    ("import", "look 'gray' could not be loaded (ModuleNotFoundError: No module named 'gray_look'), "
+               "so the default look was used"),
+    ("init", "look 'gray' failed to start (RuntimeError: no font), so the default look was used"),
+    ("draw", "look 'gray' failed while drawing (ValueError: bad label), so the default look was used"),
+])
+def test_a_broken_look_falls_back_with_a_warning(ui, gray_installed, monkeypatch, tmp_path, capsys, case, warning):
+    def load():
+        if case == "import":
+            import gray_look  # noqa: F401
+        return Broken if case == "init" else BadDraw
+    monkeypatch.setattr(EP, "load", lambda self: load())
+    s = {"input": ui, "look": "gray", "marks": [EVERY[0], EVERY[5]]}
+    res = render(s)
+    assert res.warnings[0] == warning
+    assert res.image.tobytes() == render(dict(s, look="default")).image.tobytes()
+    spec = tmp_path / "s.json"                       # the CLI prints it like any render warning
+    spec.write_text(json.dumps(s))
+    assert cli.main(["annotate", str(spec), "--draft"]) == 0
+    assert warning in capsys.readouterr().err
+
+
+def test_mcp_tools_take_a_look_and_return_its_warning(ui, gray_installed, out_dirs):
+    pytest.importorskip("mcp")
+    import anyio
+    from mcp import Client
+
+    from ainotate.mcp_server import mcp
+
+    async def go():
+        async with Client(mcp) as c:
+            tools = {t.name: t for t in (await c.list_tools()).tools}
+            for name in ("annotate", "preview", "shoot"):
+                assert "installed look" in tools[name].input_schema["properties"]["look"]["description"]
+            res = await c.call_tool("annotate", {"spec": {"input": ui, "marks": [EVERY[1]]}, "look": "nope"})
+            return json.loads(res.content[0].text)
+    d = anyio.run(go)
+    assert d["ok"] and d["warnings"] == ["look 'nope' is not installed, so the default look was used; "
+                                         "installed looks: default, gray"]
+
+
+def test_look_must_be_a_name(ui):
     with pytest.raises(SpecError) as e:
-        render(s)
-    assert "'neat', not an installed look; installed looks: default, gray" in str(e.value)
-    assert ("AINOTATE_LOOK" if where == "env" else "'look'") in str(e.value)
+        render({"input": ui, "look": 3, "marks": []})
+    assert "'look' must be a look name" in str(e.value)
 
 
-@pytest.mark.parametrize("broken", ["import", "not-a-look", "init"])
-def test_a_broken_look_falls_back_to_the_default_with_a_warning(ui, monkeypatch, broken):
-    class Boom(Look):
-        def __init__(self, ctx):
-            raise RuntimeError("bad font file")
+# ---------------------------------------------------------------- a look can never change redactions
 
-    class Bad:
-        name, group = "neat", "ainotate.looks"
+REDACT = {"type": "redact", "rect": [100, 100, 300, 130]}
 
-        def load(self):
-            if broken == "import":
-                raise ImportError("No module named 'neat_look'")
-            return object if broken == "not-a-look" else Boom
-    real = importlib.metadata.entry_points
-    monkeypatch.setattr(importlib.metadata, "entry_points",
-                        lambda **kw: [Bad()] if kw.get("group") == "ainotate.looks" else real(**kw))
-    s = {"input": ui, "marks": [EVERY[1]]}
-    res = render(dict(s, look="neat"))
-    assert res.image.tobytes() == render(s).image.tobytes()
-    assert any("look 'neat' could not be loaded" in w and "used the default look" in w for w in res.warnings)
+
+class Mutates(Gray):
+    """Changes the geometry and spec data it is given, then fails (in __init__ or in outline)."""
+    when = "init"
+
+    def __init__(self, ctx):
+        super().__init__(ctx)
+        ctx.rects[0][0] += 10                       # the redaction's left edge
+        ctx.marks[1].pop("label", None)
+        if Mutates.when == "init":
+            raise RuntimeError("bad start")
+
+    def outline(self, layer, i, g):
+        raise RuntimeError("bad outline")
+
+
+class Paints(Gray):
+    """Works, but paints white over the whole page image it is handed."""
+
+    def label(self, layer, img, i, box, text):
+        img.paste((255, 255, 255, 255), (0, 0, img.width, img.height))
+        super().label(layer, img, i, box, text)
+
+
+@pytest.mark.parametrize("cls, when", [(Mutates, "init"), (Mutates, "draw"), (Paints, None)])
+def test_a_look_never_changes_redaction_coverage_or_the_spec(ui, gray_installed, monkeypatch, cls, when):
+    import copy
+    Mutates.when = when
+    monkeypatch.setattr(EP, "load", lambda self: cls)
+    s = {"input": ui, "look": "gray", "marks": [REDACT, EVERY[1]]}
+    before = copy.deepcopy(s)
+    res = render(s)
+    assert s == before
+    assert res.image.getpixel((100, 110)) == res.image.getpixel((299, 129)) != (255, 255, 255)
+    plain = render(dict(s, look="default")).image
+    if cls is Mutates:   # the failed render is redone from the spec, exactly as the default look
+        assert res.image.tobytes() == plain.tobytes()
+        assert res.warnings[0].startswith("look 'gray' failed")
+    else:                # a working look: drawn by it, on its own copy of the page
+        assert not res.warnings and res.image.tobytes() != plain.tobytes()
+
+
+class BadValues(Gray):
+    bad = "shadow"
+
+    @property
+    def shadow(self):
+        if BadValues.bad == "shadow":
+            raise RuntimeError("no shadow")
+        return (0, 0, 0)
+
+    def redact_fill(self, i):
+        return "not-a-color" if BadValues.bad == "redact_fill" else "#555555"
+
+    def label_size(self, text):
+        return (0, -1) if BadValues.bad == "label_size" else super().label_size(text)
+
+
+@pytest.mark.parametrize("bad, why", [
+    ("shadow", "RuntimeError: no shadow"),
+    ("redact_fill", "ValueError: unknown color specifier: 'not-a-color'"),
+    ("label_size", "ValueError: label_size() is (0, -1)"),
+])
+def test_bad_attributes_and_hook_results_fall_back(ui, gray_installed, monkeypatch, tmp_path, capsys, bad, why):
+    BadValues.bad = bad
+    monkeypatch.setattr(EP, "load", lambda self: BadValues)
+    s = {"input": ui, "look": "gray", "marks": [REDACT, EVERY[1]]}
+    res = render(s)
+    assert res.warnings[0] == f"look 'gray' failed while drawing ({why}), so the default look was used"
+    assert res.image.tobytes() == render(dict(s, look="default")).image.tobytes()
+    spec = tmp_path / "s.json"
+    spec.write_text(json.dumps(s))
+    assert cli.main(["annotate", str(spec), "--draft"]) == 0
+    assert why in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------- values the core cannot use
+
+class Odd(Gray):
+    kind = "name"
+
+    def color(self, i):
+        return "info" if Odd.kind == "name" else super().color(i)
+
+    @property
+    def shadow(self):
+        return (0.3, float("inf"), 0.15) if Odd.kind == "inf" else (0, 0, 0)
+
+    def label_size(self, text):   # passes the checks, but no frame has room for it
+        return (999_999, 999_999) if Odd.kind == "huge" else super().label_size(text)
+
+
+def test_a_color_name_from_a_look_is_drawn_as_its_color(ui, gray_installed, monkeypatch):
+    Odd.kind = "name"
+    monkeypatch.setattr(EP, "load", lambda self: Odd)
+    click = {"type": "click", "at": [1410, 125]}   # drawn by AInotate in the look's color(i)
+    res = render({"input": ui, "look": "gray", "marks": [click]})
+    assert not res.warnings and res.image.getpixel((1410, 125)) != Image.open(ui).getpixel((1410, 125))
+
+
+@pytest.mark.parametrize("kind, why", [
+    ("inf", "(ValueError: shadow is (0.3, inf, 0.15))"),
+    ("huge", "(RenderError: mark #0 (box): no room for label 'Coupon'."),
+])
+def test_values_the_core_cannot_use_fall_back(ui, gray_installed, monkeypatch, kind, why):
+    Odd.kind = kind
+    monkeypatch.setattr(EP, "load", lambda self: Odd)
+    s = {"input": ui, "look": "gray", "marks": [EVERY[1]]}
+    res = render(s)
+    assert res.warnings[0].startswith("look 'gray' failed while drawing " + why)
+    assert res.warnings[0].endswith(", so the default look was used")
+    assert res.image.tobytes() == render(dict(s, look="default")).image.tobytes()
+
+
+def test_an_error_the_default_look_also_hits_is_raised(ui, gray_installed):
+    from ainotate.render import RenderError
+    with pytest.raises(RenderError):   # a label position outside the image is the spec's fault
+        render({"input": ui, "look": "gray", "marks": [dict(EVERY[1], label_at=[5000, 10])]})

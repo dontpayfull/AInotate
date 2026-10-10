@@ -250,7 +250,8 @@ def _fix_for(e: BaseException) -> str:
 
 
 _FALLBACK_SPEC = """Spec: {"input": image path, "scale": spec units -> image px, "crop": "auto" |
-[x1,y1,x2,y2] | {x,y,w,h}, "crop_pad": 260, "dim": 0.55, "name": "file name", "marks": [...]}
+[x1,y1,x2,y2] | {x,y,w,h}, "crop_pad": 260, "dim": 0.55, "name": "file name", "look": "default" or an
+installed look such as "neat" (mark style), "marks": [...]}
 Units: every coordinate (rect, crop, label_at, at, pad) in ONE unit. DOM rects from capture_web:
 dicts {x,y,w,h} with the returned scale. locate / grid / zoom pixels: lists [x1,y1,x2,y2], scale 1.
 Colors: look (orange, default), bad (red: only for wrong/bug), good (green), info (blue).
