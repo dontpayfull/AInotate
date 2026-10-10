@@ -12,7 +12,14 @@ All notable changes to AInotate.
 - `--privacy auto` without an OCR engine says how to fix it: install one, or use `--privacy off`
   (with rect coordinates when marks use text targets) (#2).
 
-Thanks to @testy-cool for #1 and #2.
+### Added
+- Looks: other packages can supply a look for the marks (entry point group `ainotate.looks`,
+  a subclass of `ainotate.render.Look`), picked with `"look"` in the spec, `--look`, the MCP
+  `look` argument, `AINOTATE_LOOK` or `look` in config.toml. The built-in look stays the default
+  and renders pixel-identical. A look that fails to load falls back to the default with a
+  warning (#3).
+
+Thanks to @testy-cool for #1, #2 and #3.
 
 ## 0.1.7 - 2026-10-10
 
