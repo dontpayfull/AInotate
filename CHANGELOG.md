@@ -2,7 +2,7 @@
 
 All notable changes to AInotate.
 
-## Unreleased
+## 0.1.8 - 2026-10-10
 
 ### Changed
 - Guides: a wider page so full-window screenshots stay readable, an optional bold `title` per
