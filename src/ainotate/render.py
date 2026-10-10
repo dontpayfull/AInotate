@@ -162,13 +162,24 @@ class Look:
         return font_for(keys, int(1.15 * self.ctx.u))
 
 
-def _look(spec):
+def _look(spec, ctx, warnings):
+    """The look instance for this render. A look that is installed but fails to load or start
+    falls back to the built-in one with a warning: a broken add-on never costs the image."""
     if "look" in spec:
         name = spec["look"]
     else:
         from .output import default_look
         name = default_look()
-    return Look if name == "default" else installed_looks()[name].load()
+    if name != "default":
+        try:
+            cls = installed_looks()[name].load()
+            if not (isinstance(cls, type) and issubclass(cls, Look)):
+                raise TypeError("not a subclass of ainotate.render.Look")
+            return cls(ctx)
+        except Exception as e:   # noqa: BLE001  (third-party code: any failure means "use the default")
+            warnings.append(f"look {name!r} could not be loaded ({type(e).__name__}: {e}); "
+                            "used the default look")
+    return Look(ctx)
 
 
 # ---------- render ----------
@@ -258,8 +269,8 @@ def render(spec: dict, debug: bool = False) -> RenderResult:
     W, H = img.size
     u = mark_unit(W, H, scale)
     style = spec.get("arrow_style", "skitch")
-    lk = _look(spec)(SimpleNamespace(page=page, marks=marks, rects=rects, points=points,
-                                         offset=(ox, oy), scale=scale, u=u))
+    lk = _look(spec, SimpleNamespace(page=page, marks=marks, rects=rects, points=points,
+                                     offset=(ox, oy), scale=scale, u=u), warnings)
     stroke = lk.stroke
     base_pad = 0.7 * u
 

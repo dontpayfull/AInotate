@@ -1,6 +1,7 @@
 import hashlib
 import importlib.metadata
 import json
+import sys
 
 import PIL
 import pytest
@@ -24,9 +25,14 @@ EVERY = [
     {"type": "blur", "rect": [290, 680, 700, 700]},
     {"type": "pixelate", "rect": [290, 735, 700, 755]},
 ]
-# sha256 of the default render of every mark type, made with the code before looks were pluggable
-DEFAULT_SHA = {False: "2459af01e003be489fe9675a07cea01f3109a6ed153d6b02d767dd0d11456417",
-               True: "fc93f1192da4bbcc2fb0ad05d98fa91b006776c58c0968f158ffa25769628368"}
+# sha256 of the default render of every mark type, made with the code before looks were pluggable.
+# Fonts come from the system, so the pixels are pinned per platform (Linux: the contributor's run).
+DEFAULT_SHA = {
+    ("linux", False): "2459af01e003be489fe9675a07cea01f3109a6ed153d6b02d767dd0d11456417",
+    ("linux", True): "fc93f1192da4bbcc2fb0ad05d98fa91b006776c58c0968f158ffa25769628368",
+    ("darwin", False): "5a795eaadddc77d6fde353ef40765eb6dac235f7963d7d56396cccdbb181956f",
+    ("darwin", True): "d0402a305915cd4f43326b0f8bee1d166a8cd16e95fe80ab736abd71523f92c6",
+}
 
 
 @pytest.mark.parametrize("dark", [False, True])
@@ -34,9 +40,10 @@ def test_default_look_is_unchanged(ui, ui_dark, dark):
     s = {"input": ui_dark if dark else ui, "marks": EVERY}
     img = render(s).image
     assert render(dict(s, look="default")).image.tobytes() == img.tobytes()
-    if (PIL.__version__, features.version("freetype2")) != ("12.3.0", "2.14.3"):
-        pytest.skip("pinned pixels were made with Pillow 12.3.0 and FreeType 2.14.3")
-    assert hashlib.sha256(img.tobytes()).hexdigest() == DEFAULT_SHA[dark]
+    if (PIL.__version__, features.version("freetype2")) != ("12.3.0", "2.14.3") \
+            or (sys.platform, dark) not in DEFAULT_SHA:
+        pytest.skip("pinned pixels were made with Pillow 12.3.0 and FreeType 2.14.3 on Linux and macOS")
+    assert hashlib.sha256(img.tobytes()).hexdigest() == DEFAULT_SHA[(sys.platform, dark)]
 
 
 class Gray(Look):
@@ -107,3 +114,25 @@ def test_unknown_look_lists_the_installed_looks(ui, gray_installed, monkeypatch,
         render(s)
     assert "'neat', not an installed look; installed looks: default, gray" in str(e.value)
     assert ("AINOTATE_LOOK" if where == "env" else "'look'") in str(e.value)
+
+
+@pytest.mark.parametrize("broken", ["import", "not-a-look", "init"])
+def test_a_broken_look_falls_back_to_the_default_with_a_warning(ui, monkeypatch, broken):
+    class Boom(Look):
+        def __init__(self, ctx):
+            raise RuntimeError("bad font file")
+
+    class Bad:
+        name, group = "neat", "ainotate.looks"
+
+        def load(self):
+            if broken == "import":
+                raise ImportError("No module named 'neat_look'")
+            return object if broken == "not-a-look" else Boom
+    real = importlib.metadata.entry_points
+    monkeypatch.setattr(importlib.metadata, "entry_points",
+                        lambda **kw: [Bad()] if kw.get("group") == "ainotate.looks" else real(**kw))
+    s = {"input": ui, "marks": [EVERY[1]]}
+    res = render(dict(s, look="neat"))
+    assert res.image.tobytes() == render(s).image.tobytes()
+    assert any("look 'neat' could not be loaded" in w and "used the default look" in w for w in res.warnings)
