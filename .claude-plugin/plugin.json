@@ -9,8 +9,8 @@
   "keywords": ["screenshot", "annotation", "mcp", "skill", "redaction", "documentation"],
   "mcpServers": {
     "ainotate": {
-      "command": "sh",
-      "args": ["-c", "PATH=\"$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH\"; if command -v ainotate >/dev/null 2>&1; then exec ainotate mcp; else exec uvx --from 'ainotate[all]==0.1.8' ainotate mcp; fi"]
+      "command": "uvx",
+      "args": ["--from", "ainotate[all]==0.1.8", "ainotate", "mcp"]
     }
   }
 }
