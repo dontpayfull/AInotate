@@ -2,6 +2,18 @@
 
 All notable changes to AInotate.
 
+## Unreleased
+
+### Changed
+- Guides: a wider page so full-window screenshots stay readable, an optional bold `title` per
+  step, `**bold**`, `` `code` `` and `- ` lists in step text, and click-to-zoom on a picture (#1).
+- Guide images keep their own size by default; `--width N` still puts them on one canvas (#2).
+- Tesseract runs on one thread, so one OCR pass no longer takes every core (#2).
+- `--privacy auto` without an OCR engine says how to fix it: install one, or use `--privacy off`
+  (with rect coordinates when marks use text targets) (#2).
+
+Thanks to @testy-cool for #1 and #2.
+
 ## 0.1.7 - 2026-10-10
 
 ### Added
