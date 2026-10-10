@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 import html
 import mimetypes
+import re
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -15,16 +16,85 @@ _CSS = """
 @media (prefers-color-scheme:dark){:root{--bg:#1c1c1e;--fg:#f5f5f7;--muted:#98989d;--accent:#2f8cff;--line:#3a3a3c;--shadow:0 2px 6px rgba(0,0,0,.5),0 10px 30px rgba(0,0,0,.5)}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:860px;margin:0 auto;padding:56px 24px 80px}
+main{max-width:1100px;margin:0 auto;padding:56px 24px 80px}
 h1{font-size:2.1rem;line-height:1.2;letter-spacing:-.02em;margin:0 0 12px}
 .intro{color:var(--muted);font-size:1.1rem;margin:0 0 40px}
 section.step{margin:0 0 48px;break-inside:avoid;page-break-inside:avoid}
-h2{display:flex;gap:14px;align-items:flex-start;font-size:1.3rem;line-height:1.35;font-weight:600;margin:0 0 16px;letter-spacing:-.01em}
-h2 .n{flex:none;min-width:2rem;height:2rem;border-radius:1rem;background:var(--accent);color:#fff;font-size:1rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:.05rem}
+h2{display:flex;gap:14px;align-items:flex-start;font-size:1.15rem;line-height:28px;font-weight:400;margin:0 0 16px;letter-spacing:-.01em}
+h2 .n{flex:none;min-width:28px;height:28px;border-radius:14px;background:var(--accent);color:#fff;font-size:1rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 img{display:block;max-width:100%;height:auto;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--line)}
+h1,.intro,h2{max-width:860px}
+section.step img{margin-left:42px;max-width:calc(100% - 42px)}
+h2 .t{font-weight:600}
+.say{max-width:818px;margin:-8px 0 16px 42px;line-height:1.6}
+.say p{margin:0 0 8px}
+.say ul{margin:0 0 8px;padding-left:22px}
+.say li{margin:2px 0}
+code{font:.9em/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--line);padding:1px 5px;border-radius:4px}
+img.zoomable{cursor:zoom-in}
+#zoom{position:fixed;inset:0;z-index:10;display:flex;overflow:hidden;padding:24px;background:rgba(0,0,0,.7);cursor:zoom-out;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility 0s .2s}
+#zoom.open{opacity:1;visibility:visible;transition:opacity .2s ease}
+#zoom img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.5);transform:scale(.96);transition:transform .2s ease}
+#zoom.open img{transform:none}
+@media (prefers-reduced-motion:reduce){#zoom,#zoom img{transition:none}}
 @page{size:A4;margin:16mm}
-@media print{body{background:#fff;color:#000;font-size:12pt}main{max-width:none;padding:0}img{box-shadow:none;border:1px solid #ccc;border-radius:6px}section.step{margin-bottom:22pt}h2 .n{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{#zoom{display:none}body{background:#fff;color:#000;font-size:12pt}main{max-width:none;padding:0}img{box-shadow:none;border:1px solid #ccc;border-radius:6px}section.step{margin-bottom:22pt}section.step img{margin-left:0;max-width:100%}h2 .n{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 """
+
+# Click a step image shown smaller than its real size to see it as large as the window allows; click or Esc closes.
+_ZOOM_JS = (
+    "const z=document.getElementById('zoom');"
+    "const mark=()=>document.querySelectorAll('section.step img').forEach(i=>"
+    "i.classList.toggle('zoomable',i.naturalWidth>i.clientWidth+4));"
+    "addEventListener('load',mark);addEventListener('resize',mark);"
+    "addEventListener('click',e=>{if(e.target.closest('#zoom')){z.classList.remove('open');return}"
+    "const i=e.target.closest('img.zoomable');if(i){z.firstChild.src=i.src;z.classList.add('open')}});"
+    "addEventListener('keydown',e=>{if(e.key==='Escape')z.classList.remove('open')});"
+)
+
+
+def _inline(raw: str) -> str:
+    """Escape, then **bold** and `code`."""
+    parts = re.split(r"(`[^`\n]+`)", raw)
+    out = []
+    for k, part in enumerate(parts):
+        if k % 2:
+            out.append(f"<code>{html.escape(part[1:-1])}</code>")
+        else:
+            out.append(re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html.escape(part)))
+    return "".join(out)
+
+
+def _rich(raw: str) -> str:
+    """Step explanation: inline marks, and lines starting with "- " become a list."""
+    blocks, para, items = [], [], []
+    def flush():
+        if para:
+            blocks.append(f"<p>{'<br>'.join(para)}</p>")
+            para.clear()
+        if items:
+            blocks.append(f"<ul>{''.join(f'<li>{i}</li>' for i in items)}</ul>")
+            items.clear()
+    for line in raw.split("\n"):
+        s = line.strip()
+        if s.startswith(("- ", "* ")):
+            if para:
+                flush()
+            items.append(_inline(s[2:]))
+        elif not s:
+            flush()
+        else:
+            if items:
+                flush()
+            para.append(_inline(s))
+    flush()
+    return "".join(blocks)
+
+
+def _plain(raw: str) -> str:
+    """Text for the Pillow PDF: drop the marks, bullets for list lines."""
+    raw = re.sub(r"\*\*(.+?)\*\*", r"\1", raw).replace("`", "")
+    return re.sub(r"(?m)^\s*[-*] ", "• ", raw)
 
 
 def _html(title, intro, steps) -> str:
@@ -32,16 +102,23 @@ def _html(title, intro, steps) -> str:
     for i, s in enumerate(steps, 1):
         mime = mimetypes.guess_type(str(s["image"]))[0] or "image/png"
         b64 = base64.b64encode(s["image"].read_bytes()).decode("ascii")
-        text = html.escape(s["text"]).replace("\n", "<br>") or f"Step {i}"
+        title = _inline(s.get("title", ""))
+        if title:
+            head_html = f'<span class="t">{title}</span>'
+            body = f'<div class="say">{_rich(s["text"])}</div>' if s["text"] else ""
+        else:
+            text = "<br>".join(_inline(ln) for ln in s["text"].split("\n"))
+            head_html, body = f"<span>{text or f'Step {i}'}</span>", ""
         parts.append(
-            f'<section class="step"><h2><span class="n">{i}</span><span>{text}</span></h2>'
+            f'<section class="step"><h2><span class="n">{i}</span>{head_html}</h2>{body}'
             f'<img src="data:{mime};base64,{b64}" alt="{html.escape(s["alt"], quote=True)}"></section>')
     head = f"<h1>{html.escape(title)}</h1>" if title else ""
     lead = f'<p class="intro">{html.escape(intro).replace(chr(10), "<br>")}</p>' if intro else ""
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>{html.escape(title or "Guide")}</title><style>{_CSS}</style></head>'
-            f'<body><main>{head}{lead}{"".join(parts)}</main></body></html>')
+            f'<body><main>{head}{lead}{"".join(parts)}</main>'
+            f'<div id="zoom"><img alt=""></div><script>{_ZOOM_JS}</script></body></html>')
 
 
 def _pdf_playwright(html_path: Path, pdf_path: Path) -> None:
@@ -131,7 +208,7 @@ def _pdf_pillow(title, intro, steps, pdf_path: Path) -> None:
         d.text((M + r, y0 + r), str(i), font=style.load_font(26), fill="white", anchor="mm")
         tf = style.load_font(36)
         st["y"] = y0 + 4
-        text(_wrap(d, s["text"] or f"Step {i}", tf, W - 2 * M - 2 * r - 20), tf, 46, M + 2 * r + 20,
+        text(_wrap(d, _plain("\n".join(x for x in (s.get("title", ""), s["text"]) if x)) or f"Step {i}", tf, W - 2 * M - 2 * r - 20), tf, 46, M + 2 * r + 20,
              (29, 29, 31))
         y = max(st["y"], y0 + 2 * r if st["d"] is d else 0) + 28
         im = _rgb(_open(s["image"]))
