@@ -461,6 +461,15 @@ def test_within_failure_counts_matches_outside(monkeypatch, capsys):
         ocr.resolve(None, {"text": "Delete", "within": [0, 0, 900, 400]}, items=items)
 
 
+def test_resolve_tie_breaker_case_and_spacing():
+    """When multiple top candidates tie after normalization, resolve picks exact case/space match."""
+    items = items_of(("hobbylobby", 100, 10), ("Hobby Lobby", 100, 60))
+    # Unspaced query uniquely resolves to unspaced item (y=10)
+    assert ocr.resolve(None, {"text": "hobbylobby"}, items=items) == [100.0, 10.0, 180.0, 24.0]
+    # Spaced query uniquely resolves to spaced item (y=60)
+    assert ocr.resolve(None, {"text": "Hobby Lobby"}, items=items) == [100.0, 60.0, 188.0, 74.0]
+
+
 def test_not_found_and_ambiguous_mask_secrets(monkeypatch, capsys):
     """OCR text quoted in errors goes through privacy.mask_text (message, near, candidates)."""
     secret = "jane.doe@example.com"

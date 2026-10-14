@@ -303,6 +303,14 @@ def resolve(image_path, target, *, scale=1.0, langs=None, backend="auto", items=
     if not top:
         raise not_found(q, items, within=within, exact=exact)
     if len(top) > 1:
+        exact_matches = [c for c in top if c["text"] == q]
+        if len(exact_matches) == 1:
+            top = exact_matches
+        else:
+            space_matches = [c for c in top if c["text"].lower() == q.lower()]
+            if len(space_matches) == 1:
+                top = space_matches
+    if len(top) > 1:
         raise AmbiguousText(f"{len(top)} equally good matches for {q!r}: "
                             + "; ".join(f"{c['rect']} {c['text']!r}" for c in top)
                             + ". Ask the user which one, or add nth (0-based, reading order) or within",
