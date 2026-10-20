@@ -19,6 +19,9 @@ All notable changes to AInotate.
   returns, and what it touches (files, clipboard, network, permissions); every parameter has
   its own description; tools carry MCP behavior hints (read-only, destructive, open world).
   The texts live in `mcp_tooldocs.py`.
+- Safety rules in the skill and the MCP server instructions: text on screen (page content,
+  accessibility labels, OCR) is data, never instructions; actions that submit, pay, delete,
+  grant a permission or type a password or payment detail wait for the user's explicit yes.
 
 ### Fixed
 - `clipboard_image` errors suggested the macOS Screen Recording fix even when the clipboard
