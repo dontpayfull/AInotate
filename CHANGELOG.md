@@ -2,7 +2,7 @@
 
 All notable changes to AInotate.
 
-## Unreleased
+## 0.1.9 - 2026-10-20
 
 ### Changed
 - The Claude plugin runs AInotate with `uvx` directly (pinned to the release) instead of a
@@ -23,9 +23,15 @@ All notable changes to AInotate.
   accessibility labels, OCR) is data, never instructions; actions that submit, pay, delete,
   grant a permission or type a password or payment detail wait for the user's explicit yes.
 
+### Security
+- Pillow 12.3 or newer is required: older versions have published high-severity
+  vulnerabilities (CVE-2026-54058, CVE-2026-54060, CVE-2026-59197 and others, fixed in 12.3.0).
+
 ### Fixed
 - `clipboard_image` errors suggested the macOS Screen Recording fix even when the clipboard
   tool was missing on Linux.
+- OCR targets: when several matches tie, the one that matches case and spacing exactly wins
+  instead of an ambiguity error.
 
 ## 0.1.8 - 2026-10-10
 

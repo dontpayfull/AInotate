@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ainotate"
-version = "0.1.8"
+version = "0.1.9"
 description = "Annotated screenshots for AI agents: Skitch-style arrows, numbered steps, boxes, labels, solid redaction"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -38,7 +38,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 dependencies = [
-    "Pillow>=10.1",
+    "Pillow>=12.3",
     "tomli>=1.1; python_version<'3.11'",
 ]
 
