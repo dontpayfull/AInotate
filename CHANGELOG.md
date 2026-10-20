@@ -15,6 +15,14 @@ All notable changes to AInotate.
 - AInotate has a website: https://www.dontpayfull.com/labs/ainotate/ (homepage, get started,
   privacy and terms), linked from the README, the plugin, PyPI, the MCP Registry entry, the
   Desktop extension and the MCP server info.
+- MCP tools: every description now says when to pick the tool over its siblings, what it
+  returns, and what it touches (files, clipboard, network, permissions); every parameter has
+  its own description; tools carry MCP behavior hints (read-only, destructive, open world).
+  The texts live in `mcp_tooldocs.py`.
+
+### Fixed
+- `clipboard_image` errors suggested the macOS Screen Recording fix even when the clipboard
+  tool was missing on Linux.
 
 ## 0.1.8 - 2026-10-10
 

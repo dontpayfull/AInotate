@@ -20,6 +20,10 @@ from pydantic import Field
 from PIL import Image
 
 from . import __version__
+from . import mcp_tooldocs as D
+from .mcp_tooldocs import (
+    ACTIONS, ANN, DESC, DRAFT, IMAGE_PATH, LOOK, NAME, REGION, SPEC, TARGETS_WEB, X1, X2, Y1, Y2,
+)
 from .mcp_docs import (  # noqa: F401  (re-export)
     CYAN, DRAFT_NEXT, INSTRUCTIONS, MAGENTA, PREVIEW_MAX, PREVIEW_QUALITY, SETUP, _flat, _jpeg, _small,
     grid_preview, preview_jpeg, _FALLBACK_SPEC, _INSTALL, _WORKFLOW, _StrayToStderr, _draft_next, _fix_for,
@@ -95,12 +99,6 @@ def _spec(spec) -> dict:
     return spec
 
 
-LOOK = Annotated[Optional[str], Field(description=(
-    'Mark style: "default" (bold, built in) or the name of an installed look package (e.g. "neat"). '
-    "Omit it to use the spec's look, else the user's default (AINOTATE_LOOK, config.toml). A look "
-    "that is not installed or fails falls back to default with a warning listing the installed looks."))]
-
-
 def _with_look(spec, look):
     spec = _spec(spec)
     return dict(spec, look=look) if look and isinstance(spec, dict) else spec
@@ -131,41 +129,25 @@ def _annotate(spec, draft: bool, debug: bool, tool: str) -> types.CallToolResult
     return _result(payload, jpeg)
 
 
-@mcp.tool()
-async def annotate(spec: Union[dict, str], draft: bool = True, look: LOOK = None) -> types.CallToolResult:
-    """Render an annotation spec onto its `input` image. Draft by default (temp dir): check the
-    returned preview, then call again with draft=false to save to the output folder.
-    spec: {"input": path, "scale": 1|2.., "crop": "auto"|[x1,y1,x2,y2], "name": "...",
-    "marks": [{"type": "step"|"box"|"arrow"|"highlight"|"spotlight"|"redact"|"text"|...,
-    "rect": {x,y,w,h} or [x1,y1,x2,y2], "label": "...", "n": 1, "color": "look|bad|good|info"}]}.
-    Every coordinate in one unit; scale converts it to image px. Full reference: ainotate://spec.
-    look: the mark style, "default" or an installed look such as "neat" (sets spec "look").
-    Returns paths, size, warnings, legend (step numbers + labels), redactions and a preview."""
+@mcp.tool(description=DESC["annotate"], annotations=ANN["annotate"])
+async def annotate(spec: SPEC, draft: DRAFT = True, look: LOOK = None) -> types.CallToolResult:
     return await _run("annotate", lambda: _annotate(_with_look(spec, look), draft, False, "annotate"))
 
 
-@mcp.tool()
-async def preview(spec: Union[dict, str], look: LOOK = None) -> types.CallToolResult:
-    """Draft render with the debug overlay (cyan target rects, magenta label boxes); saves
-    nothing permanent. Use it to check placement before annotate. look: as in annotate."""
+@mcp.tool(description=DESC["preview"], annotations=ANN["preview"])
+async def preview(spec: SPEC, look: LOOK = None) -> types.CallToolResult:
     return await _run("preview", lambda: _annotate(_with_look(spec, look), True, True, "preview"))
 
 
 # ---------------------------------------------------------------- web
 
-@mcp.tool()
-async def capture_web(url: Optional[str] = None, cdp_url: Optional[str] = None,
-                      page_url_contains: Optional[str] = None, preset: str = "laptop",
-                      targets: Optional[dict[str, dict]] = None, actions: Optional[list[dict]] = None,
-                      hide_overlays: bool = True, full_page: bool = False, timeout_ms: float = 30000,
-                      browser: str = "chromium", user_data_dir: Optional[str] = None) -> types.CallToolResult:
-    """Screenshot a web page and measure named targets. Presets: laptop 1280x800@2, wide
-    1600x1000@2, phone 390x844@3. targets: {"name": {"text": "Checkout"} | {"selector": "css"} |
-    {"role": "button", "name": "Save"}, optional "within", "nth", "exact", "fit"}. actions run first:
-    {"click": T}, {"fill": T, "value": "..."}, {"wait": T}, {"scroll_to": T}, {"wait_ms": 500}.
-    cdp_url + page_url_contains attach to a running logged-in browser instead of launching one.
-    Returns the image path, rects in CSS px, scale (use as the spec scale), missing targets,
-    a spec stub, and a preview with the resolved rects outlined."""
+@mcp.tool(description=DESC["capture_web"], annotations=ANN["capture_web"])
+async def capture_web(url: D.URL = None, cdp_url: D.CDP_URL = None,
+                      page_url_contains: D.PAGE_URL_CONTAINS = None, preset: D.PRESET = "laptop",
+                      targets: TARGETS_WEB = None, actions: ACTIONS = None,
+                      hide_overlays: D.HIDE_OVERLAYS = True, full_page: D.FULL_PAGE = False,
+                      timeout_ms: D.TIMEOUT_MS = 30000, browser: D.BROWSER = "chromium",
+                      user_data_dir: D.USER_DATA_DIR = None) -> types.CallToolResult:
     def work():
         from .capture import web
         c = web.capture(url, cdp_url=cdp_url, page_url_contains=page_url_contains, preset=preset,
@@ -192,13 +174,8 @@ async def capture_web(url: Optional[str] = None, cdp_url: Optional[str] = None,
     return await _run("capture_web", work)
 
 
-@mcp.tool()
-async def shoot(spec: Union[dict, str], draft: bool = True, look: LOOK = None) -> types.CallToolResult:
-    """One call from URL to annotated image: spec = render spec without input/scale, plus
-    url (or cdp_url + page_url_contains), preset, actions, and marks with "target": {...}
-    (same forms as capture_web) instead of "rect". Draft by default: check the preview, then
-    call again with draft=false to save. Returns paths, warnings, legend, redactions (secrets
-    hidden automatically), the capture's resolved rects and a preview. look: as in annotate."""
+@mcp.tool(description=DESC["shoot"], annotations=ANN["shoot"])
+async def shoot(spec: SPEC, draft: DRAFT = True, look: LOOK = None) -> types.CallToolResult:
     def work():
         try:
             from .shoot import shoot as _shoot
@@ -229,14 +206,10 @@ async def shoot(spec: Union[dict, str], draft: bool = True, look: LOOK = None) -
 
 # ---------------------------------------------------------------- locate
 
-@mcp.tool()
-async def locate(image_path: str, text: str, all: bool = False, nth: Optional[int] = None,
-                 within: Optional[list[float]] = None, exact: bool = False,
-                 lang: Optional[str] = None, backend: Optional[str] = None) -> types.CallToolResult:
-    """Find text on an image by OCR. Returns rect [x1,y1,x2,y2] in image px (spec scale 1)
-    per match, best first; several equally good matches = ambiguous (ask the user, or pass
-    nth 0-based in reading order, or within [x1,y1,x2,y2]). all=true lists weaker matches too.
-    The preview outlines the matches."""
+@mcp.tool(description=DESC["locate"], annotations=ANN["locate"])
+async def locate(image_path: IMAGE_PATH, text: D.TEXT, all: D.ALL = False, nth: D.NTH = None,
+                 within: D.WITHIN = None, exact: D.EXACT = False,
+                 lang: D.LANG = None, backend: D.BACKEND = None) -> types.CallToolResult:
     def work():
         from . import ocr
         langs_arg = [lang] if lang else None
@@ -276,18 +249,16 @@ def _captured(tool: str, path, extra: Optional[dict] = None, boxes=None) -> type
     return _result(payload, jpeg)
 
 
-@mcp.tool()
-async def capture_screen(region: Optional[Union[list[int], str]] = None) -> types.CallToolResult:
-    """Capture the screen, or region [x, y, w, h] in screen coordinates."""
+@mcp.tool(description=DESC["capture_screen"], annotations=ANN["capture_screen"])
+async def capture_screen(region: REGION = None) -> types.CallToolResult:
     def work():
         from .capture import desktop
         return _captured("capture_screen", desktop.screen(region=region))
     return await _run("capture_screen", work)
 
 
-@mcp.tool()
-async def list_windows(filter: Optional[str] = None) -> types.CallToolResult:
-    """Visible windows: [{id, app, title, bounds}]; filter = case-insensitive app/title substring."""
+@mcp.tool(description=DESC["list_windows"], annotations=ANN["list_windows"])
+async def list_windows(filter: D.FILTER = None) -> types.CallToolResult:
     def work():
         from .capture import desktop
         wins = desktop.list_windows(filter)
@@ -298,11 +269,8 @@ async def list_windows(filter: Optional[str] = None) -> types.CallToolResult:
     return await _run("list_windows", work)
 
 
-@mcp.tool()
-async def capture_window(id: Union[int, str], targets: Optional[dict] = None) -> types.CallToolResult:
-    """Capture one window by id from list_windows (never moves or resizes it). macOS: targets
-    {name: {"element": label, "role"?, "nth"?, "exact"?}} measures UI elements (Accessibility) and
-    returns rects plus the scale to put in the annotate spec."""
+@mcp.tool(description=DESC["capture_window"], annotations=ANN["capture_window"])
+async def capture_window(id: D.WINDOW_ID, targets: D.TARGETS_AX = None) -> types.CallToolResult:
     def work():
         from .capture import desktop
         if targets:
@@ -329,9 +297,8 @@ async def capture_window(id: Union[int, str], targets: Optional[dict] = None) ->
     return await _run("capture_window", work)
 
 
-@mcp.tool()
+@mcp.tool(description=DESC["clipboard_image"], annotations=ANN["clipboard_image"])
 async def clipboard_image() -> types.CallToolResult:
-    """Save the image on the clipboard (e.g. a screenshot the user just copied) as PNG."""
     def work():
         from .capture import clipboard
         return _captured("clipboard_image", clipboard.grab())
@@ -340,10 +307,8 @@ async def clipboard_image() -> types.CallToolResult:
 
 # ---------------------------------------------------------------- locate visually
 
-@mcp.tool()
-async def grid(image_path: str, step: int = 100) -> types.CallToolResult:
-    """Coordinate grid every `step` image px to find the area of an element; then zoom into it
-    for an exact rect. The preview IS the grid (labels in source px)."""
+@mcp.tool(description=DESC["grid"], annotations=ANN["grid"])
+async def grid(image_path: IMAGE_PATH, step: D.GRID_STEP = 100) -> types.CallToolResult:
     def work():
         from .tools import grid as _grid
         r = _grid(image_path, step)
@@ -354,11 +319,9 @@ async def grid(image_path: str, step: int = 100) -> types.CallToolResult:
     return await _run("grid", work)
 
 
-@mcp.tool()
-async def zoom(image_path: str, x1: float, y1: float, x2: float, y2: float,
-               step: int = 20) -> types.CallToolResult:
-    """Enlarged crop of [x1,y1,x2,y2] with a fine grid whose labels are SOURCE image px: read
-    the rect straight off the preview (scale 1). Keep regions under ~500 px wide."""
+@mcp.tool(description=DESC["zoom"], annotations=ANN["zoom"])
+async def zoom(image_path: IMAGE_PATH, x1: X1, y1: Y1, x2: X2, y2: Y2,
+               step: D.ZOOM_STEP = 20) -> types.CallToolResult:
     def work():
         from .tools import zoom as _zoom
         r = _zoom(image_path, x1, y1, x2, y2, step)
@@ -371,14 +334,9 @@ async def zoom(image_path: str, x1: float, y1: float, x2: float, y2: float,
 
 # ---------------------------------------------------------------- export
 
-@mcp.tool()
-async def make_guide(steps: list[dict], title: str = "", formats: Optional[list[str]] = None,
-                     name: str = "", draft: bool = True) -> types.CallToolResult:
-    """Step-by-step guide from annotated images: steps [{"image": path, "text": "...", "alt"?}],
-    formats any of md, html, pdf (default md + html); every step image keeps its own size.
-    name = folder name in the output folder (default "guide"). Draft by default (temp
-    dir): check the preview (the first step's image), then call again with draft=false to save.
-    Returns the file per format."""
+@mcp.tool(description=DESC["make_guide"], annotations=ANN["make_guide"])
+async def make_guide(steps: D.STEPS, title: D.TITLE = "", formats: D.FORMATS = None,
+                     name: NAME = "", draft: DRAFT = True) -> types.CallToolResult:
     def work():
         from .export import guide
         res = guide(steps, title, formats=formats or ["md", "html"], name=name, draft=draft)
@@ -392,13 +350,9 @@ async def make_guide(steps: list[dict], title: str = "", formats: Optional[list[
     return await _run("make_guide", work)
 
 
-@mcp.tool()
-async def compare(before: str, after: str, labels: Optional[list[str]] = None, layout: str = "auto",
-                  name: str = "", draft: bool = True) -> types.CallToolResult:
-    """Before/after plate: both images side by side or stacked, labelled (default "Before",
-    "After"; pass labels in the audience's language). layout = "auto" | "side" | "stack".
-    name = file name (default "compare"). Draft by default: check the preview, then call again with
-    draft=false to save it to the output folder."""
+@mcp.tool(description=DESC["compare"], annotations=ANN["compare"])
+async def compare(before: D.BEFORE, after: D.AFTER, labels: D.LABELS = None, layout: D.LAYOUT = "auto",
+                  name: NAME = "", draft: DRAFT = True) -> types.CallToolResult:
     def work():
         from .export import compare as _compare
         p = _compare(before, after, labels=tuple(labels) if labels else ("Before", "After"),
@@ -410,14 +364,10 @@ async def compare(before: str, after: str, labels: Optional[list[str]] = None, l
     return await _run("compare", work)
 
 
-@mcp.tool()
-async def animate(frames: list[str], format: str = "apng", duration_ms: Optional[int] = None,
-                  durations_ms: Optional[int] = None, loop: int = 0, crossfade_ms: int = 0,
-                  name: str = "", draft: bool = True) -> types.CallToolResult:
-    """Animation from image paths: apng (full color, default) or gif (plays everywhere: Slack,
-    mail, Jira). duration_ms per frame (default 1500). name = file name (default "animation").
-    Draft by default: the preview shows the first frame; check it, then call again with
-    draft=false to save to the output folder."""
+@mcp.tool(description=DESC["animate"], annotations=ANN["animate"])
+async def animate(frames: D.FRAMES, format: D.FORMAT = "apng", duration_ms: D.DURATION_MS = None,
+                  durations_ms: D.DURATIONS_MS = None, loop: D.LOOP = 0, crossfade_ms: D.CROSSFADE_MS = 0,
+                  name: NAME = "", draft: DRAFT = True) -> types.CallToolResult:
     def work():
         from .export import gif
         d_ms = duration_ms if duration_ms is not None else durations_ms
@@ -430,9 +380,8 @@ async def animate(frames: list[str], format: str = "apng", duration_ms: Optional
     return await _run("animate", work)
 
 
-@mcp.tool()
-async def copy_to_clipboard(path: str) -> types.CallToolResult:
-    """Put an image on the system clipboard so the user can paste it (Slack, Jira, mail)."""
+@mcp.tool(description=DESC["copy_to_clipboard"], annotations=ANN["copy_to_clipboard"])
+async def copy_to_clipboard(path: IMAGE_PATH) -> types.CallToolResult:
     def work():
         from .export import copy_to_clipboard as _copy
         _copy(path)
@@ -440,10 +389,8 @@ async def copy_to_clipboard(path: str) -> types.CallToolResult:
     return await _run("copy_to_clipboard", work)
 
 
-@mcp.tool()
+@mcp.tool(description=DESC["doctor"], annotations=ANN["doctor"])
 async def doctor() -> types.CallToolResult:
-    """Check this machine: Pillow, font, output folder, Playwright, CDP browser, screen capture
-    permission, window listing, OCR, clipboard, mcp. Failed checks carry the exact fix."""
     def work():
         from dataclasses import asdict
 

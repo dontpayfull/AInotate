@@ -228,6 +228,9 @@ def _fix_for(e: BaseException) -> str:
         return ("Check the URL or the target. For a logged-in page attach to a running browser: "
                 "cdp_url (e.g. http://127.0.0.1:9222) + page_url_contains. doctor() checks "
                 "Playwright and CDP.")
+    if name == "CaptureError" and "clipboard" in msg.lower():
+        return ("Install the clipboard tool named above (Linux), or copy an image to the clipboard "
+                "first and call again.")
     if name == "CaptureError":
         return ("On macOS the Screen Recording permission belongs to the app running this server "
                 "(Claude for Claude Desktop); restart it after enabling. list_windows() gives "
