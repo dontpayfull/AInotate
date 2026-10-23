@@ -320,3 +320,37 @@ def test_guide_step_text_supports_bold_code_and_sublists(tmp_path):
     md = res["md"].read_text()
     assert "   - **Mac:** use brew" in md and "&lt;apt&gt;</li></ul><p>Done.</p>" in h and "apt>\n\n   Done." in md
     assert res["pdf"].stat().st_size > 0
+
+
+def test_guide_html_keeps_guide_title_and_formats_intro(tmp_path):
+    # issue #7: a step title used to overwrite the guide title in the HTML heading
+    from PIL import Image
+    from ainotate.export import guide
+    imgs = []
+    for n in ("first", "last"):
+        p = tmp_path / f"{n}.png"
+        Image.new("RGB", (16, 16), "white").save(p)
+        imgs.append(str(p))
+    steps = [{"image": imgs[0], "title": "First", "text": "Step with **bold**."},
+             {"image": imgs[1], "title": "Last", "text": "Done."}]
+    res = guide(steps, "My Guide", tmp_path / "out", formats=("md", "html"),
+                intro="Intro with **bold**.\n- Intro item <x>")
+    h = res["html"].read_text()
+    assert "<h1>My Guide</h1>" in h and "<title>My Guide</title>" in h and "<h1>Last</h1>" not in h
+    assert ('<div class="intro"><p>Intro with <strong>bold</strong>.</p>'
+            "<ul><li>Intro item &lt;x&gt;</li></ul></div>") in h
+    assert res["md"].read_text().startswith("# My Guide")
+
+
+def test_guide_intro_without_title_and_blank_intro(tmp_path):
+    from PIL import Image
+    from ainotate.export import guide
+    img = tmp_path / "a.png"
+    Image.new("RGB", (40, 30), "white").save(img)
+    res = guide([{"image": str(img), "text": "Go."}], "", tmp_path / "a", formats=("html",), intro="Only an intro")
+    assert '<div class="intro"><p>Only an intro</p></div>' in res["html"].read_text()
+    res = guide([{"image": str(img), "text": "Go."}], "T", tmp_path / "b", formats=("html",), intro="   ")
+    assert 'class="intro"' not in res["html"].read_text()
+    with mock.patch.object(export, "_pdf_playwright", side_effect=ImportError("no pw")):
+        res = guide([{"image": str(img), "text": "Go."}], "", tmp_path / "c", formats=("pdf",), intro="**Only** an intro")
+    assert res.pdf_backend == "pillow" and res["pdf"].read_bytes()[:5] == b"%PDF-"

@@ -197,6 +197,7 @@ def guide(steps: list, title: str = "", out_dir=None, formats: Sequence[str] = (
     if width is not None and (not isinstance(width, int) or isinstance(width, bool) or width < 0):
         raise ExportError(f"width must be a positive number of pixels (got {width!r})", "width")
     st = _norm_steps(steps)
+    intro = intro or ""
     out = Path(out_dir).expanduser() if out_dir else _default_dir(slug(name) or "guide", draft)
     out.mkdir(parents=True, exist_ok=True)
     stem = slug(title) or slug(name) or "guide"

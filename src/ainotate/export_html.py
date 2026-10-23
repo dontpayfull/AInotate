@@ -19,6 +19,9 @@ body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 -apple-system,
 main{max-width:1100px;margin:0 auto;padding:56px 24px 80px}
 h1{font-size:2.1rem;line-height:1.2;letter-spacing:-.02em;margin:0 0 12px}
 .intro{color:var(--muted);font-size:1.1rem;margin:0 0 40px}
+.intro p{margin:0 0 8px}
+.intro ul{margin:0 0 8px;padding-left:22px}
+.intro li{margin:2px 0}
 section.step{margin:0 0 48px;break-inside:avoid;page-break-inside:avoid}
 h2{display:flex;gap:14px;align-items:flex-start;font-size:1.15rem;line-height:28px;font-weight:400;margin:0 0 16px;letter-spacing:-.01em}
 h2 .n{flex:none;min-width:28px;height:28px;border-radius:14px;background:var(--accent);color:#fff;font-size:1rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
@@ -102,9 +105,9 @@ def _html(title, intro, steps) -> str:
     for i, s in enumerate(steps, 1):
         mime = mimetypes.guess_type(str(s["image"]))[0] or "image/png"
         b64 = base64.b64encode(s["image"].read_bytes()).decode("ascii")
-        title = _inline(s.get("title", ""))
-        if title:
-            head_html = f'<span class="t">{title}</span>'
+        step_title = _inline(s.get("title", ""))
+        if step_title:
+            head_html = f'<span class="t">{step_title}</span>'
             body = f'<div class="say">{_rich(s["text"])}</div>' if s["text"] else ""
         else:
             text = "<br>".join(_inline(ln) for ln in s["text"].split("\n"))
@@ -113,7 +116,7 @@ def _html(title, intro, steps) -> str:
             f'<section class="step"><h2><span class="n">{i}</span>{head_html}</h2>{body}'
             f'<img src="data:{mime};base64,{b64}" alt="{html.escape(s["alt"], quote=True)}"></section>')
     head = f"<h1>{html.escape(title)}</h1>" if title else ""
-    lead = f'<p class="intro">{html.escape(intro).replace(chr(10), "<br>")}</p>' if intro else ""
+    lead = f'<div class="intro">{_rich(intro)}</div>' if intro.strip() else ""
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>{html.escape(title or "Guide")}</title><style>{_CSS}</style></head>'
@@ -193,13 +196,14 @@ def _pdf_pillow(title, intro, steps, pdf_path: Path) -> None:
     for i, s in enumerate(steps, 1):
         new_page()
         d = st["d"]
-        if i == 1 and title:
-            f = style.load_font(54)
-            text(_wrap(d, title, f, W - 2 * M), f, 66, M, (29, 29, 31))
-            st["y"] += 6
-            if intro:
+        if i == 1 and (title or intro.strip()):
+            if title:
+                f = style.load_font(54)
+                text(_wrap(d, title, f, W - 2 * M), f, 66, M, (29, 29, 31))
+                st["y"] += 6
+            if intro.strip():
                 fi = _body_font(30)
-                text(_wrap(d, intro, fi, W - 2 * M), fi, 40, M, (110, 110, 115))
+                text(_wrap(d, _plain(intro), fi, W - 2 * M), fi, 40, M, (110, 110, 115))
             st["y"] += 30
         if st["y"] + 2 * 22 + 46 > H - M:   # no room for the badge and a first line
             new_page()

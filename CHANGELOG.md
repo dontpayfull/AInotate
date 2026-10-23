@@ -2,6 +2,14 @@
 
 All notable changes to AInotate.
 
+## Unreleased
+
+### Fixed
+- Guides: the HTML heading and page title showed the last step's title instead of the guide
+  title, and so did the Playwright PDF (#7, thanks @Pranav-Bobde). The intro now gets the same
+  formatting as step text (bold, code, lists); the Pillow PDF shows it without Markdown marks
+  and no longer drops it when the guide has no title.
+
 ## 0.1.9 - 2026-10-20
 
 ### Changed
